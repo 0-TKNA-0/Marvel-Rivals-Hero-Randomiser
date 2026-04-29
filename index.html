@@ -986,17 +986,22 @@
       s.classList.add("spinning");
       slots.push(s);
     }
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const TOTAL = 8;
     let ticks = 0;
     const interval = setInterval(() => {
       const pool = ROSTER.filter(c => enabled.has(c.name));
       if (pool.length > 0)
         for (let i = 1; i <= playerCount; i++)
           setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)], false);
-      if (++ticks >= 8) {
+      if (ac) playTick(ac, 1 - ticks / TOTAL);
+      if (++ticks >= TOTAL) {
         clearInterval(interval);
         currentSquad = squad.slice();
         squad.forEach((c, i) => setSlot(i + 1, c, true));
         slots.forEach(s => s.classList.remove("spinning"));
+        if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
@@ -1014,14 +1019,19 @@
     const slotEl = document.getElementById("slot" + playerIdx);
     slotEl.classList.add("spinning");
     document.getElementById("portrait" + playerIdx).onclick = null;
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const TOTAL = 8;
     let ticks = 0;
     const interval = setInterval(() => {
       setSlot(playerIdx, pickFrom[Math.floor(cryptoRandom() * pickFrom.length)], false);
-      if (++ticks >= 8) {
+      if (ac) playTick(ac, 1 - ticks / TOTAL);
+      if (++ticks >= TOTAL) {
         clearInterval(interval);
         currentSquad[playerIdx - 1] = picked;
         setSlot(playerIdx, picked, true);
         slotEl.classList.remove("spinning");
+        if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
