@@ -287,6 +287,188 @@
   }
   .portrait.role-banned { border-color: #c0524f; }
   .portrait.rerollable.role-banned:hover { box-shadow: 0 0 0 3px rgba(192,82,79,0.6); }
+
+  /* ── Case-opening reel overlay ─────────────────────────────────────── */
+  .reel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8,10,14,0.97);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 1rem;
+    opacity: 1;
+    transition: opacity 0.45s ease;
+  }
+  .reel-overlay.fading { opacity: 0; pointer-events: none; }
+  .reel-cases {
+    width: 100%;
+    max-width: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .reel-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .reel-row-label {
+    font-size: 11px;
+    color: #888780;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    width: 58px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .reel-viewport {
+    flex: 1;
+    height: 104px;
+    overflow: hidden;
+    border-radius: 6px;
+    border: 1px solid #2a2e38;
+    background: #0b0d12;
+    position: relative;
+  }
+  /* Top/bottom pointer triangles */
+  .reel-viewport::before,
+  .reel-viewport::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+  }
+  .reel-viewport::before { top: 0;    border-top:    10px solid #f4c430; }
+  .reel-viewport::after  { bottom: 0; border-bottom: 10px solid #f4c430; }
+  .reel-center-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    background: rgba(244,196,48,0.12);
+    z-index: 3;
+    pointer-events: none;
+  }
+  .reel-fade {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 90px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .reel-fade-left  { left:  0; background: linear-gradient(to right, #0b0d12, transparent); }
+  .reel-fade-right { right: 0; background: linear-gradient(to left,  #0b0d12, transparent); }
+  .reel-strip {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    will-change: transform;
+  }
+  .reel-item {
+    flex-shrink: 0;
+    width: 110px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-right: 1px solid #181b22;
+  }
+  .reel-item-portrait {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #2a2e38;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    overflow: hidden;
+    border: 2px solid #2a2e38;
+    flex-shrink: 0;
+  }
+  .reel-item-portrait.role-vanguard   { border-color: #378ADD; }
+  .reel-item-portrait.role-duelist    { border-color: #E24B4A; }
+  .reel-item-portrait.role-strategist { border-color: #97C459; }
+  .reel-item-portrait.role-banned     { border-color: #c0524f; }
+  .reel-item-portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .reel-item-name {
+    font-size: 10px;
+    color: #444;
+    text-align: center;
+    line-height: 1.2;
+    width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+  .reel-item-highlighted {
+    background: rgba(244,196,48,0.1);
+  }
+  .reel-item-highlighted .reel-item-portrait {
+    box-shadow: 0 0 0 2px #f4c430, 0 0 22px rgba(244,196,48,0.45);
+  }
+  .reel-item-highlighted .reel-item-name { color: #f4c430; }
+  .reel-item-ban-highlighted {
+    background: rgba(192,82,79,0.1);
+  }
+  .reel-item-ban-highlighted .reel-item-portrait {
+    box-shadow: 0 0 0 2px #c0524f, 0 0 22px rgba(192,82,79,0.45);
+  }
+  .reel-item-ban-highlighted .reel-item-name { color: #e07070; }
+
+  /* CS mode toggle */
+  .mode-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #888780;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  .mode-toggle:hover { color: #c8c6c1; }
+  .mode-toggle input[type=checkbox] { display: none; }
+  .toggle-track {
+    width: 38px;
+    height: 22px;
+    background: #2a2e38;
+    border-radius: 11px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #555;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .mode-toggle input:checked + .toggle-track { background: linear-gradient(135deg, #f4c430, #e23636); }
+  .mode-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(16px); background: #fff; }
+  .mode-toggle input:checked ~ .toggle-label { color: #e8e6e1; }
 </style>
 </head>
 <body>
@@ -297,6 +479,14 @@
   <div class="tabs">
     <button class="tab-btn active" data-tab="squad">🎲 Squad</button>
     <button class="tab-btn" data-tab="bans">🚫 Bans</button>
+  </div>
+
+  <div class="mode-row">
+    <label class="mode-toggle" id="modeToggle">
+      <input type="checkbox" id="csModeCheck">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label">CS Case Opening Mode</span>
+    </label>
   </div>
 
   <div class="panel active" id="panel-squad">
@@ -424,10 +614,12 @@
   }
 
   const STORAGE_KEY = "mr_disabled_chars_v4";
-  const COUNT_KEY = "mr_player_count";
+  const COUNT_KEY   = "mr_player_count";
+  const CS_MODE_KEY = "mr_cs_mode";
   const enabled = new Set(ROSTER.map(c => c.name));
   let playerCount = 2;
   let currentSquad = [];
+  let csMode = false;
 
   // Load saved preferences
   try {
@@ -438,6 +630,7 @@
     }
     const savedCount = parseInt(localStorage.getItem(COUNT_KEY), 10);
     if (savedCount >= 1 && savedCount <= 6) playerCount = savedCount;
+    csMode = localStorage.getItem(CS_MODE_KEY) === "1";
   } catch (e) {}
 
   function savePrefs() {
@@ -445,6 +638,7 @@
       const disabled = ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(disabled));
       localStorage.setItem(COUNT_KEY, String(playerCount));
+      localStorage.setItem(CS_MODE_KEY, csMode ? "1" : "0");
     } catch (e) {}
   }
 
@@ -588,69 +782,242 @@
     }
   }
 
-  function roll() {
-    const squad = pickSquad(playerCount);
-    if (!squad) {
-      showEmpty();
-      return;
-    }
+  // ── Case-opening reel animation ─────────────────────────────────────────
+  const ITEM_W    = 110;   // px width of each reel card
+  const PRE_ITEMS = 42;    // cards before the winner in the strip
+  const ROLL_DUR  = 6200;  // ms — full roll animation
+  const SINGLE_DUR = 4400; // ms — single re-roll animation
 
+  // Easing: mostly linear (fast constant scroll) then a sharp deceleration
+  function reelEase(t) {
+    const split = 0.7, fast = 0.86;
+    if (t < split) return (fast / split) * t;
+    const u = (t - split) / (1 - split);
+    return fast + (1 - fast) * (1 - Math.pow(1 - u, 5));
+  }
+
+  function buildReelStrip(winner, pool) {
+    const items = [];
+    for (let i = 0; i < PRE_ITEMS; i++)
+      items.push(pool[Math.floor(cryptoRandom() * pool.length)]);
+    items.push(winner);
+    for (let i = 0; i < 12; i++)
+      items.push(pool[Math.floor(cryptoRandom() * pool.length)]);
+    return items;
+  }
+
+  function makeReelItemEl(character, isWinner, isBan) {
+    const el = document.createElement("div");
+    el.className = "reel-item" + (isWinner ? " reel-item-winner" : "");
+    const p = document.createElement("div");
+    p.className = "reel-item-portrait " + (isBan ? "role-banned" : roleClass[character.role]);
+    p.appendChild(buildPortrait(character));
+    el.appendChild(p);
+    const n = document.createElement("div");
+    n.className = "reel-item-name";
+    n.textContent = character.name.replace(/ \((Vanguard|Duelist|Strategist)\)$/, "");
+    el.appendChild(n);
+    return el;
+  }
+
+  // Metallic click — short noise transient + high-freq ring, mimicking CS case scroll
+  function playTick(ac, speed) {
+    try {
+      const now = ac.currentTime;
+      const vol = Math.min(0.28, 0.05 + speed * 0.23);
+
+      // Sharp transient: shaped noise burst through a high-pass filter
+      const len = Math.ceil(ac.sampleRate * 0.014);
+      const buf = ac.createBuffer(1, len, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+      const noise = ac.createBufferSource();
+      noise.buffer = buf;
+      const hpf = ac.createBiquadFilter();
+      hpf.type = "highpass";
+      hpf.frequency.value = 4000;
+      const noiseGain = ac.createGain();
+      noiseGain.gain.value = vol * 0.55;
+      noise.connect(hpf); hpf.connect(noiseGain); noiseGain.connect(ac.destination);
+      noise.start(now);
+
+      // Metallic ring: short triangle oscillator at ~2.4 kHz
+      const osc = ac.createOscillator();
+      osc.type = "triangle";
+      osc.frequency.value = 2400;
+      const oscGain = ac.createGain();
+      oscGain.gain.setValueAtTime(vol * 0.45, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
+      osc.connect(oscGain); oscGain.connect(ac.destination);
+      osc.start(now); osc.stop(now + 0.022);
+    } catch (e) {}
+  }
+
+  // Reveal "ding" — plays when the winner is highlighted after the reel stops
+  function playReveal(ac, isBan) {
+    try {
+      const now = ac.currentTime;
+      const baseFreq = isBan ? 520 : 880;
+
+      // Primary tone: decaying sine
+      const osc = ac.createOscillator();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(baseFreq * 0.5, now);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.06);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(0.22, now + 0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(now); osc.stop(now + 1.6);
+
+      // Shimmer harmonic an octave up
+      const osc2 = ac.createOscillator();
+      osc2.type = "sine";
+      osc2.frequency.value = baseFreq * 2;
+      const g2 = ac.createGain();
+      g2.gain.setValueAtTime(0.0001, now + 0.03);
+      g2.gain.linearRampToValueAtTime(0.08, now + 0.08);
+      g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+      osc2.connect(g2); g2.connect(ac.destination);
+      osc2.start(now + 0.03); osc2.stop(now + 0.9);
+    } catch (e) {}
+  }
+
+  function showReelOverlay(rows, duration, isBan, onComplete) {
+    // rows: [{ label, winner, pool }]
+    const overlay = document.createElement("div");
+    overlay.className = "reel-overlay";
+
+    const casesEl = document.createElement("div");
+    casesEl.className = "reel-cases";
+    overlay.appendChild(casesEl);
+
+    const reelData = rows.map(row => {
+      const rowEl = document.createElement("div");
+      rowEl.className = "reel-row";
+
+      if (row.label) {
+        const lbl = document.createElement("span");
+        lbl.className = "reel-row-label";
+        lbl.textContent = row.label;
+        rowEl.appendChild(lbl);
+      }
+
+      const vp = document.createElement("div");
+      vp.className = "reel-viewport";
+
+      const cl = document.createElement("div");
+      cl.className = "reel-center-line";
+      vp.appendChild(cl);
+
+      const strip = document.createElement("div");
+      strip.className = "reel-strip";
+      buildReelStrip(row.winner, row.pool).forEach((char, i) =>
+        strip.appendChild(makeReelItemEl(char, i === PRE_ITEMS, isBan))
+      );
+      vp.appendChild(strip);
+
+      ["reel-fade reel-fade-left", "reel-fade reel-fade-right"].forEach(cls => {
+        const f = document.createElement("div");
+        f.className = cls;
+        vp.appendChild(f);
+      });
+
+      rowEl.appendChild(vp);
+      casesEl.appendChild(rowEl);
+      return { strip, vp };
+    });
+
+    document.body.appendChild(overlay);
+
+    // Two rAF frames to ensure layout is measured after paint
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const targets = reelData.map(({ vp }) =>
+        -(PRE_ITEMS * ITEM_W + ITEM_W / 2 - vp.offsetWidth / 2)
+      );
+
+      // One shared AudioContext for all ticks in this animation
+      let ac = null;
+      try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+
+      const startTime = performance.now();
+      let lastTickIdx = -1;
+
+      (function frame(now) {
+        const t = Math.min((now - startTime) / duration, 1);
+        const p = reelEase(t);
+
+        // Fire a tick each time the reel crosses an item boundary
+        const tickIdx = Math.floor(Math.abs(p * targets[0]) / ITEM_W);
+        if (ac && tickIdx !== lastTickIdx) {
+          lastTickIdx = tickIdx;
+          playTick(ac, 1 - t);
+        }
+
+        reelData.forEach(({ strip }, i) => {
+          strip.style.transform = "translateX(" + (p * targets[i]) + "px)";
+        });
+
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          const hlClass = isBan ? "reel-item-ban-highlighted" : "reel-item-highlighted";
+          reelData.forEach(({ strip }) =>
+            strip.querySelectorAll(".reel-item-winner").forEach(el => el.classList.add(hlClass))
+          );
+          if (ac) { playReveal(ac, isBan); setTimeout(() => ac.close().catch(() => {}), 2000); }
+          setTimeout(() => {
+            overlay.classList.add("fading");
+            setTimeout(() => { overlay.remove(); onComplete(); }, 450);
+          }, 1500);
+        }
+      })(performance.now());
+    }));
+  }
+
+  // ── Simple (original) flicker animations ────────────────────────────────
+  function rollSimple() {
+    const squad = pickSquad(playerCount);
+    if (!squad) { showEmpty(); return; }
     const slots = [];
     for (let i = 1; i <= playerCount; i++) {
       const s = document.getElementById("slot" + i);
       s.classList.add("spinning");
       slots.push(s);
     }
-
     let ticks = 0;
     const interval = setInterval(() => {
       const pool = ROSTER.filter(c => enabled.has(c.name));
-      if (pool.length > 0) {
-        for (let i = 1; i <= playerCount; i++) {
+      if (pool.length > 0)
+        for (let i = 1; i <= playerCount; i++)
           setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)], false);
-        }
-      }
-      ticks++;
-      if (ticks >= 8) {
+      if (++ticks >= 8) {
         clearInterval(interval);
         currentSquad = squad.slice();
-        for (let i = 0; i < squad.length; i++) {
-          setSlot(i + 1, squad[i], true);
-        }
+        squad.forEach((c, i) => setSlot(i + 1, c, true));
         slots.forEach(s => s.classList.remove("spinning"));
       }
     }, 80);
   }
 
-  function rollOne(playerIdx) {
+  function rollOneSimple(playerIdx) {
     const pool = ROSTER.filter(c => enabled.has(c.name));
     if (pool.length === 0) return;
-
-    // Exclude characters currently assigned to other players
-    const others = new Set(
-      currentSquad
-        .filter((_, i) => i !== playerIdx - 1)
-        .map(c => c.name)
-    );
+    const others = new Set(currentSquad.filter((_, i) => i !== playerIdx - 1).map(c => c.name));
     const exclusive = pool.filter(c => !others.has(c.name));
     const pickFrom = exclusive.length > 0 ? exclusive : pool;
-
-    // Pick a different character than the current one if possible
     const current = currentSquad[playerIdx - 1];
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
-
     const slotEl = document.getElementById("slot" + playerIdx);
-    const portraitEl = document.getElementById("portrait" + playerIdx);
     slotEl.classList.add("spinning");
-    portraitEl.onclick = null;
-
+    document.getElementById("portrait" + playerIdx).onclick = null;
     let ticks = 0;
     const interval = setInterval(() => {
       setSlot(playerIdx, pickFrom[Math.floor(cryptoRandom() * pickFrom.length)], false);
-      ticks++;
-      if (ticks >= 8) {
+      if (++ticks >= 8) {
         clearInterval(interval);
         currentSquad[playerIdx - 1] = picked;
         setSlot(playerIdx, picked, true);
@@ -658,6 +1025,40 @@
       }
     }, 80);
   }
+
+  // ── CS reel animations ───────────────────────────────────────────────────
+  function rollCS() {
+    const squad = pickSquad(playerCount);
+    if (!squad) { showEmpty(); return; }
+    const pool = ROSTER.filter(c => enabled.has(c.name));
+    showReelOverlay(
+      squad.map((winner, i) => ({ label: "Player " + (i + 1), winner, pool })),
+      ROLL_DUR, false,
+      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); }
+    );
+  }
+
+  function rollOneCS(playerIdx) {
+    const pool = ROSTER.filter(c => enabled.has(c.name));
+    if (pool.length === 0) return;
+    const others = new Set(currentSquad.filter((_, i) => i !== playerIdx - 1).map(c => c.name));
+    const exclusive = pool.filter(c => !others.has(c.name));
+    const pickFrom = exclusive.length > 0 ? exclusive : pool;
+    const current = currentSquad[playerIdx - 1];
+    const candidates = pickFrom.filter(c => !current || c.name !== current.name);
+    const finalPool = candidates.length > 0 ? candidates : pickFrom;
+    const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    document.getElementById("portrait" + playerIdx).onclick = null;
+    showReelOverlay(
+      [{ label: "Player " + playerIdx, winner: picked, pool: pickFrom }],
+      SINGLE_DUR, false,
+      () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); }
+    );
+  }
+
+  // ── Dispatchers ──────────────────────────────────────────────────────────
+  function roll()            { csMode ? rollCS()             : rollSimple();          }
+  function rollOne(idx)      { csMode ? rollOneCS(idx)       : rollOneSimple(idx);    }
 
   // Ban roster — deduplicated by base name so Deadpool's role variants collapse to one entry
   const BAN_ROSTER = [];
@@ -703,52 +1104,41 @@
     portraitEl.appendChild(buildPortrait(character));
   }
 
-  function rollBans() {
+  function rollBansSimple() {
     const shuffled = BAN_ROSTER.slice();
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(cryptoRandom() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const picks = shuffled.slice(0, 3);
-
-    for (let i = 1; i <= 3; i++) {
-      document.getElementById("banSlot" + i).classList.add("spinning");
-    }
-
+    for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.add("spinning");
     let ticks = 0;
     const interval = setInterval(() => {
-      for (let i = 1; i <= 3; i++) {
+      for (let i = 1; i <= 3; i++)
         setBanSlot(i, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
-      }
-      ticks++;
-      if (ticks >= 8) {
+      if (++ticks >= 8) {
         clearInterval(interval);
         currentBans = picks.slice();
-        for (let i = 0; i < 3; i++) setBanSlot(i + 1, picks[i], true);
+        picks.forEach((c, i) => setBanSlot(i + 1, c, true));
         for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.remove("spinning");
       }
     }, 80);
   }
 
-  function rollOneBan(banIdx) {
-    const others = new Set(
-      currentBans.filter((_, i) => i !== banIdx - 1).map(c => c.name)
-    );
+  function rollOneBanSimple(banIdx) {
+    const others = new Set(currentBans.filter((_, i) => i !== banIdx - 1).map(c => c.name));
     const pickFrom = BAN_ROSTER.filter(c => !others.has(c.name));
     const current = currentBans[banIdx - 1];
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
-
     const slotEl = document.getElementById("banSlot" + banIdx);
     slotEl.classList.add("spinning");
     document.getElementById("banPortrait" + banIdx).onclick = null;
-
     let ticks = 0;
     const interval = setInterval(() => {
       setBanSlot(banIdx, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
-      ticks++;
-      if (ticks >= 8) {
+      if (++ticks >= 8) {
         clearInterval(interval);
         currentBans[banIdx - 1] = picked;
         setBanSlot(banIdx, picked, true);
@@ -756,6 +1146,38 @@
       }
     }, 80);
   }
+
+  function rollBansCS() {
+    const shuffled = BAN_ROSTER.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(cryptoRandom() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const picks = shuffled.slice(0, 3);
+    showReelOverlay(
+      picks.map((winner, i) => ({ label: "Ban " + (i + 1), winner, pool: BAN_ROSTER })),
+      ROLL_DUR, true,
+      () => { currentBans = picks.slice(); picks.forEach((c, i) => setBanSlot(i + 1, c, true)); }
+    );
+  }
+
+  function rollOneBanCS(banIdx) {
+    const others = new Set(currentBans.filter((_, i) => i !== banIdx - 1).map(c => c.name));
+    const pickFrom = BAN_ROSTER.filter(c => !others.has(c.name));
+    const current = currentBans[banIdx - 1];
+    const candidates = pickFrom.filter(c => !current || c.name !== current.name);
+    const finalPool = candidates.length > 0 ? candidates : pickFrom;
+    const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    document.getElementById("banPortrait" + banIdx).onclick = null;
+    showReelOverlay(
+      [{ label: "Ban " + banIdx, winner: picked, pool: pickFrom }],
+      SINGLE_DUR, true,
+      () => { currentBans[banIdx - 1] = picked; setBanSlot(banIdx, picked, true); }
+    );
+  }
+
+  function rollBans()        { csMode ? rollBansCS()          : rollBansSimple();      }
+  function rollOneBan(idx)   { csMode ? rollOneBanCS(idx)     : rollOneBanSimple(idx); }
 
   // Tab switching
   function setupTabs() {
@@ -818,6 +1240,14 @@
       renderPool();
       savePrefs();
     });
+  });
+
+  // CS mode toggle
+  const csModeCheck = document.getElementById("csModeCheck");
+  csModeCheck.checked = csMode;
+  csModeCheck.addEventListener("change", () => {
+    csMode = csModeCheck.checked;
+    savePrefs();
   });
 
   setupTabs();
