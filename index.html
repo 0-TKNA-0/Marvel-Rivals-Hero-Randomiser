@@ -106,11 +106,28 @@
     font-weight: 600;
     color: #ffffff;
     overflow: hidden;
-    transition: opacity 0.1s;
+    transition: opacity 0.1s, transform 0.15s, box-shadow 0.15s;
     border: 2px solid #2a2e38;
     flex-shrink: 0;
+    position: relative;
   }
   .portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .portrait.rerollable { cursor: pointer; }
+  .portrait.rerollable:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(244,196,48,0.55); }
+  .portrait.rerollable::after {
+    content: "🎲";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: rgba(15,17,21,0.72);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .portrait.rerollable:hover::after { opacity: 1; }
   .portrait.role-vanguard { border-color: #378ADD; }
   .portrait.role-duelist { border-color: #E24B4A; }
   .portrait.role-strategist { border-color: #97C459; }
@@ -218,6 +235,58 @@
   @media (max-width: 400px) {
     .slots.cols-2, .slots.cols-3 { grid-template-columns: 1fr; }
   }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #1a1d24;
+    border: 1px solid #2a2e38;
+    border-radius: 8px;
+    padding: 3px;
+    margin-bottom: 1.5rem;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 9px 16px;
+    background: transparent;
+    border: none;
+    color: #888780;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: #e8e6e1; }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    color: #ffffff;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .ban-slot {
+    background: #170e0e;
+    border: 1px solid #3d1515;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .ban-slot.spinning .name,
+  .ban-slot.spinning .portrait { opacity: 0.55; }
+  .ban-label {
+    font-size: 11px;
+    color: #c0524f;
+    margin: 0 0 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .portrait.role-banned { border-color: #c0524f; }
+  .portrait.rerollable.role-banned:hover { box-shadow: 0 0 0 3px rgba(192,82,79,0.6); }
 </style>
 </head>
 <body>
@@ -225,6 +294,12 @@
   <h1>Marvel Rivals Squad Randomizer</h1>
   <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
 
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="squad">🎲 Squad</button>
+    <button class="tab-btn" data-tab="bans">🚫 Bans</button>
+  </div>
+
+  <div class="panel active" id="panel-squad">
   <div class="player-count-row">
     <span class="player-count-label">Players:</span>
     <div class="player-count-buttons" id="pcButtons">
@@ -257,6 +332,15 @@
   </div>
 
   <div id="poolContainer"></div>
+  </div><!-- end panel-squad -->
+
+  <div class="panel" id="panel-bans">
+    <p class="subtitle" style="margin:0 0 1.25rem">Roll 3 characters to ban — uses the full roster regardless of your squad pool settings.</p>
+    <div class="slots cols-3" id="banSlotsContainer"></div>
+    <div class="controls">
+      <button class="btn-primary" id="rollBansBtn">🚫 Randomize Bans &nbsp;<span style="opacity:0.7;font-size:12px;">(or press space)</span></button>
+    </div>
+  </div><!-- end panel-bans -->
 </div>
 
 <script>
@@ -264,6 +348,7 @@
 
   const ROSTER = [
     // Vanguards (12)
+    { name: "Deadpool (Vanguard)", role: "Vanguard", img: A("deadpool") },
     { name: "Angela", role: "Vanguard", img: A("angela") },
     { name: "Captain America", role: "Vanguard", img: A("captain-america") },
     { name: "Doctor Strange", role: "Vanguard", img: A("doctor-strange") },
@@ -304,6 +389,7 @@
     { name: "Winter Soldier", role: "Duelist", img: A("winter-soldier") },
     { name: "Wolverine", role: "Duelist", img: A("wolverine") },
     // Strategists (12)
+    { name: "Deadpool (Strategist)", role: "Strategist", img: A("deadpool") },
     { name: "Adam Warlock", role: "Strategist", img: A("adam-warlock") },
     { name: "Cloak & Dagger", role: "Strategist", img: A("cloak-and-dagger") },
     { name: "Gambit", role: "Strategist", img: A("gambit") },
@@ -341,6 +427,7 @@
   const COUNT_KEY = "mr_player_count";
   const enabled = new Set(ROSTER.map(c => c.name));
   let playerCount = 2;
+  let currentSquad = [];
 
   // Load saved preferences
   try {
@@ -478,7 +565,7 @@
     }
   }
 
-  function setSlot(idx, character) {
+  function setSlot(idx, character, rerollable) {
     document.getElementById("name" + idx).textContent = character.name;
     const roleEl = document.getElementById("role" + idx);
     roleEl.textContent = character.role;
@@ -487,7 +574,9 @@
 
     const portraitEl = document.getElementById("portrait" + idx);
     portraitEl.innerHTML = "";
-    portraitEl.className = "portrait " + roleClass[character.role];
+    portraitEl.className = "portrait " + roleClass[character.role] + (rerollable ? " rerollable" : "");
+    portraitEl.title = rerollable ? "Click to re-roll this player" : "";
+    portraitEl.onclick = rerollable ? () => rollOne(idx) : null;
     portraitEl.appendChild(buildPortrait(character));
   }
 
@@ -518,19 +607,178 @@
       const pool = ROSTER.filter(c => enabled.has(c.name));
       if (pool.length > 0) {
         for (let i = 1; i <= playerCount; i++) {
-          setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)]);
+          setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)], false);
         }
       }
       ticks++;
       if (ticks >= 8) {
         clearInterval(interval);
+        currentSquad = squad.slice();
         for (let i = 0; i < squad.length; i++) {
-          setSlot(i + 1, squad[i]);
+          setSlot(i + 1, squad[i], true);
         }
         slots.forEach(s => s.classList.remove("spinning"));
       }
     }, 80);
   }
+
+  function rollOne(playerIdx) {
+    const pool = ROSTER.filter(c => enabled.has(c.name));
+    if (pool.length === 0) return;
+
+    // Exclude characters currently assigned to other players
+    const others = new Set(
+      currentSquad
+        .filter((_, i) => i !== playerIdx - 1)
+        .map(c => c.name)
+    );
+    const exclusive = pool.filter(c => !others.has(c.name));
+    const pickFrom = exclusive.length > 0 ? exclusive : pool;
+
+    // Pick a different character than the current one if possible
+    const current = currentSquad[playerIdx - 1];
+    const candidates = pickFrom.filter(c => !current || c.name !== current.name);
+    const finalPool = candidates.length > 0 ? candidates : pickFrom;
+    const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+
+    const slotEl = document.getElementById("slot" + playerIdx);
+    const portraitEl = document.getElementById("portrait" + playerIdx);
+    slotEl.classList.add("spinning");
+    portraitEl.onclick = null;
+
+    let ticks = 0;
+    const interval = setInterval(() => {
+      setSlot(playerIdx, pickFrom[Math.floor(cryptoRandom() * pickFrom.length)], false);
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        currentSquad[playerIdx - 1] = picked;
+        setSlot(playerIdx, picked, true);
+        slotEl.classList.remove("spinning");
+      }
+    }, 80);
+  }
+
+  // Ban roster — deduplicated by base name so Deadpool's role variants collapse to one entry
+  const BAN_ROSTER = [];
+  const _seenBanNames = new Set();
+  ROSTER.forEach(c => {
+    const baseName = c.name.replace(/ \((Vanguard|Duelist|Strategist)\)$/, "");
+    if (!_seenBanNames.has(baseName)) {
+      _seenBanNames.add(baseName);
+      BAN_ROSTER.push({ name: baseName, role: c.role, img: c.img });
+    }
+  });
+
+  let currentBans = [];
+
+  function renderBanSlots() {
+    const container = document.getElementById("banSlotsContainer");
+    container.innerHTML = "";
+    for (let i = 1; i <= 3; i++) {
+      const slot = document.createElement("div");
+      slot.className = "ban-slot";
+      slot.id = "banSlot" + i;
+      slot.innerHTML =
+        '<p class="ban-label">Ban ' + i + '</p>' +
+        '<div class="portrait role-banned" id="banPortrait' + i + '">?</div>' +
+        '<p class="name" id="banName' + i + '">Press randomize</p>' +
+        '<div><span class="role" id="banRole' + i + '" style="visibility:hidden">—</span></div>';
+      container.appendChild(slot);
+    }
+  }
+
+  function setBanSlot(idx, character, rerollable) {
+    document.getElementById("banName" + idx).textContent = character.name;
+    const roleEl = document.getElementById("banRole" + idx);
+    roleEl.textContent = character.role;
+    roleEl.className = "role " + roleClass[character.role];
+    roleEl.style.visibility = "visible";
+
+    const portraitEl = document.getElementById("banPortrait" + idx);
+    portraitEl.innerHTML = "";
+    portraitEl.className = "portrait role-banned" + (rerollable ? " rerollable" : "");
+    portraitEl.title = rerollable ? "Click to re-roll this ban" : "";
+    portraitEl.onclick = rerollable ? () => rollOneBan(idx) : null;
+    portraitEl.appendChild(buildPortrait(character));
+  }
+
+  function rollBans() {
+    const shuffled = BAN_ROSTER.slice();
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(cryptoRandom() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const picks = shuffled.slice(0, 3);
+
+    for (let i = 1; i <= 3; i++) {
+      document.getElementById("banSlot" + i).classList.add("spinning");
+    }
+
+    let ticks = 0;
+    const interval = setInterval(() => {
+      for (let i = 1; i <= 3; i++) {
+        setBanSlot(i, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
+      }
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        currentBans = picks.slice();
+        for (let i = 0; i < 3; i++) setBanSlot(i + 1, picks[i], true);
+        for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.remove("spinning");
+      }
+    }, 80);
+  }
+
+  function rollOneBan(banIdx) {
+    const others = new Set(
+      currentBans.filter((_, i) => i !== banIdx - 1).map(c => c.name)
+    );
+    const pickFrom = BAN_ROSTER.filter(c => !others.has(c.name));
+    const current = currentBans[banIdx - 1];
+    const candidates = pickFrom.filter(c => !current || c.name !== current.name);
+    const finalPool = candidates.length > 0 ? candidates : pickFrom;
+    const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+
+    const slotEl = document.getElementById("banSlot" + banIdx);
+    slotEl.classList.add("spinning");
+    document.getElementById("banPortrait" + banIdx).onclick = null;
+
+    let ticks = 0;
+    const interval = setInterval(() => {
+      setBanSlot(banIdx, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        currentBans[banIdx - 1] = picked;
+        setBanSlot(banIdx, picked, true);
+        slotEl.classList.remove("spinning");
+      }
+    }, 80);
+  }
+
+  // Tab switching
+  function setupTabs() {
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("panel-" + btn.getAttribute("data-tab")).classList.add("active");
+      });
+    });
+  }
+
+  // Space bar works on whichever tab is active
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
+      e.preventDefault();
+      const bansActive = document.getElementById("panel-bans").classList.contains("active");
+      if (bansActive) rollBans(); else roll();
+    }
+  });
+
+  document.getElementById("rollBansBtn").addEventListener("click", rollBans);
 
   // Player count buttons
   function setupPlayerCountButtons() {
@@ -551,12 +799,6 @@
   }
 
   document.getElementById("rollBtn").addEventListener("click", roll);
-  document.addEventListener("keydown", (e) => {
-    if (e.code === "Space" && e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
-      e.preventDefault();
-      roll();
-    }
-  });
 
   document.getElementById("enableAll").addEventListener("click", () => {
     ROSTER.forEach(c => enabled.add(c.name));
@@ -578,9 +820,11 @@
     });
   });
 
+  setupTabs();
   setupPlayerCountButtons();
   renderSlots();
   renderPool();
+  renderBanSlots();
 </script>
 </body>
 </html>
