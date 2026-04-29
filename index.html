@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marvel Rivals Squad Randomizer</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f1115;
+    color: #e8e6e1;
+    margin: 0;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle { color: #888780; font-size: 14px; margin: 0 0 1.5rem; }
+
+  .player-count-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .player-count-label {
+    font-size: 13px;
+    color: #888780;
+    font-weight: 500;
+  }
+  .player-count-buttons {
+    display: flex;
+    gap: 4px;
+    background: #1a1d24;
+    border: 1px solid #2a2e38;
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .pc-btn {
+    width: 34px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    color: #888780;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pc-btn:hover { color: #e8e6e1; }
+  .pc-btn.active {
+    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    color: #ffffff;
+  }
+
+  .slots {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .slots.cols-1 { grid-template-columns: 1fr; }
+  .slots.cols-2 { grid-template-columns: 1fr 1fr; }
+  .slots.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+  .slot {
+    background: #1a1d24;
+    border: 1px solid #2a2e38;
+    border-radius: 12px;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot.spinning .name, .slot.spinning .portrait { opacity: 0.55; }
+  .player {
+    font-size: 11px;
+    color: #888780;
+    margin: 0 0 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .portrait {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #2a2e38;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #ffffff;
+    overflow: hidden;
+    transition: opacity 0.1s;
+    border: 2px solid #2a2e38;
+    flex-shrink: 0;
+  }
+  .portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .portrait.role-vanguard { border-color: #378ADD; }
+  .portrait.role-duelist { border-color: #E24B4A; }
+  .portrait.role-strategist { border-color: #97C459; }
+  .name {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: #ffffff;
+    transition: opacity 0.1s;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .role {
+    display: inline-block;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .role-vanguard { background: #0C447C; color: #B5D4F4; }
+  .role-duelist { background: #791F1F; color: #F7C1C1; }
+  .role-strategist { background: #27500A; color: #C0DD97; }
+  .controls { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+  .btn-primary {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-primary:active { transform: scale(0.98); }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 12px;
+  }
+  .section-title { font-size: 14px; font-weight: 500; margin: 0; color: #ffffff; }
+  .section-meta { font-size: 12px; color: #888780; }
+  .mini-controls { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .mini-controls button {
+    font-size: 12px;
+    padding: 6px 12px;
+    background: #1a1d24;
+    color: #e8e6e1;
+    border: 1px solid #2a2e38;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .mini-controls button:hover { border-color: #444441; background: #21252e; }
+  .role-group { margin-bottom: 1.25rem; }
+  .role-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #888780;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    padding: 5px 10px 5px 5px;
+    border-radius: 999px;
+    border: 1px solid #2a2e38;
+    background: #1a1d24;
+    color: #e8e6e1;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .chip-portrait {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #2a2e38;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffffff;
+    overflow: hidden;
+  }
+  .chip-portrait img { width: 100%; height: 100%; object-fit: cover; }
+  .chip-name { overflow: hidden; text-overflow: ellipsis; }
+  .chip.off { opacity: 0.35; text-decoration: line-through; background: #14161b; }
+  .chip:hover { border-color: #444441; }
+  @media (max-width: 600px) {
+    .slots.cols-2, .slots.cols-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 400px) {
+    .slots.cols-2, .slots.cols-3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Marvel Rivals Squad Randomizer</h1>
+  <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
+
+  <div class="player-count-row">
+    <span class="player-count-label">Players:</span>
+    <div class="player-count-buttons" id="pcButtons">
+      <button class="pc-btn" data-count="1">1</button>
+      <button class="pc-btn active" data-count="2">2</button>
+      <button class="pc-btn" data-count="3">3</button>
+      <button class="pc-btn" data-count="4">4</button>
+      <button class="pc-btn" data-count="5">5</button>
+      <button class="pc-btn" data-count="6">6</button>
+    </div>
+  </div>
+
+  <div class="slots cols-2" id="slotsContainer"></div>
+
+  <div class="controls">
+    <button class="btn-primary" id="rollBtn">🎲 Randomize squad &nbsp;<span style="opacity:0.7;font-size:12px;">(or press space)</span></button>
+  </div>
+
+  <div class="section-head">
+    <p class="section-title">Character pool</p>
+    <span class="section-meta" id="poolCount">— enabled</span>
+  </div>
+
+  <div class="mini-controls">
+    <button id="enableAll">Enable all</button>
+    <button id="disableAll">Disable all</button>
+    <button data-role="Vanguard">Only vanguards</button>
+    <button data-role="Duelist">Only duelists</button>
+    <button data-role="Strategist">Only strategists</button>
+  </div>
+
+  <div id="poolContainer"></div>
+</div>
+
+<script>
+  const A = (slug) => "https://rivalskins.com/wp-content/uploads/marvel-assets/ui/heroes/avatar/" + slug + "_avatar.png";
+
+  const ROSTER = [
+    // Vanguards (12)
+    { name: "Angela", role: "Vanguard", img: A("angela") },
+    { name: "Captain America", role: "Vanguard", img: A("captain-america") },
+    { name: "Doctor Strange", role: "Vanguard", img: A("doctor-strange") },
+    { name: "Emma Frost", role: "Vanguard", img: A("emma-frost") },
+    { name: "Groot", role: "Vanguard", img: A("groot") },
+    { name: "Hulk", role: "Vanguard", img: A("hulk") },
+    { name: "Magneto", role: "Vanguard", img: A("magneto") },
+    { name: "Peni Parker", role: "Vanguard", img: A("peni-parker") },
+    { name: "Rogue", role: "Vanguard", img: A("rogue") },
+    { name: "The Thing", role: "Vanguard", img: A("the-thing") },
+    { name: "Thor", role: "Vanguard", img: A("thor") },
+    { name: "Venom", role: "Vanguard", img: A("venom") },
+    // Duelists (25)
+    { name: "Black Cat", role: "Duelist", img: A("black_cat") },
+    { name: "Black Panther", role: "Duelist", img: A("black-panther") },
+    { name: "Black Widow", role: "Duelist", img: A("black-widow") },
+    { name: "Blade", role: "Duelist", img: A("blade") },
+    { name: "Daredevil", role: "Duelist", img: A("daredevil") },
+    { name: "Deadpool", role: "Duelist", img: A("deadpool") },
+    { name: "Elsa Bloodstone", role: "Duelist", img: A("elsa_bloodstone") },
+    { name: "Hawkeye", role: "Duelist", img: A("hawkeye") },
+    { name: "Hela", role: "Duelist", img: A("hela") },
+    { name: "Human Torch", role: "Duelist", img: A("human-torch") },
+    { name: "Iron Fist", role: "Duelist", img: A("iron-fist") },
+    { name: "Iron Man", role: "Duelist", img: A("iron-man") },
+    { name: "Magik", role: "Duelist", img: A("magik") },
+    { name: "Mr. Fantastic", role: "Duelist", img: A("mister-fantastic") },
+    { name: "Moon Knight", role: "Duelist", img: A("moon-knight") },
+    { name: "Namor", role: "Duelist", img: A("namor") },
+    { name: "Phoenix", role: "Duelist", img: A("phoenix") },
+    { name: "Psylocke", role: "Duelist", img: A("psylocke") },
+    { name: "Scarlet Witch", role: "Duelist", img: A("scarlet-witch") },
+    { name: "Spider-Man", role: "Duelist", img: A("spider-man") },
+    { name: "Squirrel Girl", role: "Duelist", img: A("squirrel-girl") },
+    { name: "Star-Lord", role: "Duelist", img: A("star-lord") },
+    { name: "Storm", role: "Duelist", img: A("storm") },
+    { name: "The Punisher", role: "Duelist", img: A("the-punisher") },
+    { name: "Winter Soldier", role: "Duelist", img: A("winter-soldier") },
+    { name: "Wolverine", role: "Duelist", img: A("wolverine") },
+    // Strategists (12)
+    { name: "Adam Warlock", role: "Strategist", img: A("adam-warlock") },
+    { name: "Cloak & Dagger", role: "Strategist", img: A("cloak-and-dagger") },
+    { name: "Gambit", role: "Strategist", img: A("gambit") },
+    { name: "Invisible Woman", role: "Strategist", img: A("invisible-woman") },
+    { name: "Jeff the Land Shark", role: "Strategist", img: A("jeff-the-land-shark") },
+    { name: "Loki", role: "Strategist", img: A("loki") },
+    { name: "Luna Snow", role: "Strategist", img: A("luna-snow") },
+    { name: "Mantis", role: "Strategist", img: A("mantis") },
+    { name: "Rocket Raccoon", role: "Strategist", img: A("rocket-raccoon") },
+    { name: "Ultron", role: "Strategist", img: A("ultron") },
+    { name: "White Fox", role: "Strategist", img: A("white_fox") }
+  ];
+
+  const ROLE_COLORS = {
+    Vanguard: "#185FA5",
+    Duelist: "#A32D2D",
+    Strategist: "#3B6D11"
+  };
+  const roleClass = {
+    Vanguard: "role-vanguard",
+    Duelist: "role-duelist",
+    Strategist: "role-strategist"
+  };
+
+  // Cryptographically secure random number in [0, 1).
+  // Uses the OS entropy pool via crypto.getRandomValues — genuinely
+  // unpredictable, unlike Math.random()'s pseudo-random sequence.
+  function cryptoRandom() {
+    const buf = new Uint32Array(1);
+    crypto.getRandomValues(buf);
+    return buf[0] / 0x100000000;
+  }
+
+  const STORAGE_KEY = "mr_disabled_chars_v4";
+  const COUNT_KEY = "mr_player_count";
+  const enabled = new Set(ROSTER.map(c => c.name));
+  let playerCount = 2;
+
+  // Load saved preferences
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const disabled = JSON.parse(saved);
+      disabled.forEach(name => enabled.delete(name));
+    }
+    const savedCount = parseInt(localStorage.getItem(COUNT_KEY), 10);
+    if (savedCount >= 1 && savedCount <= 6) playerCount = savedCount;
+  } catch (e) {}
+
+  function savePrefs() {
+    try {
+      const disabled = ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(disabled));
+      localStorage.setItem(COUNT_KEY, String(playerCount));
+    } catch (e) {}
+  }
+
+  function getInitials(name) {
+    return name.split(/[\s&-]+/).filter(w => w.length > 0).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  }
+
+  function buildPortrait(character) {
+    const wrap = document.createElement("div");
+    wrap.style.width = "100%";
+    wrap.style.height = "100%";
+    wrap.style.display = "flex";
+    wrap.style.alignItems = "center";
+    wrap.style.justifyContent = "center";
+    wrap.style.background = ROLE_COLORS[character.role];
+    wrap.textContent = getInitials(character.name);
+
+    const img = new Image();
+    img.alt = character.name;
+    img.onload = () => {
+      wrap.textContent = "";
+      wrap.style.background = "transparent";
+      wrap.appendChild(img);
+    };
+    img.onerror = () => {};
+    img.src = character.img;
+    return wrap;
+  }
+
+  function renderSlots() {
+    const container = document.getElementById("slotsContainer");
+    container.innerHTML = "";
+    container.className = "slots cols-" + (playerCount <= 2 ? playerCount : (playerCount === 4 ? 2 : 3));
+
+    for (let i = 1; i <= playerCount; i++) {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      slot.id = "slot" + i;
+      slot.innerHTML =
+        '<p class="player">Player ' + i + '</p>' +
+        '<div class="portrait" id="portrait' + i + '">?</div>' +
+        '<p class="name" id="name' + i + '">Press randomize</p>' +
+        '<div><span class="role" id="role' + i + '" style="visibility:hidden">—</span></div>';
+      container.appendChild(slot);
+    }
+  }
+
+  function updateCount() {
+    document.getElementById("poolCount").textContent =
+      enabled.size + " of " + ROSTER.length + " enabled";
+  }
+
+  function renderPool() {
+    const container = document.getElementById("poolContainer");
+    container.innerHTML = "";
+    const roles = ["Vanguard", "Duelist", "Strategist"];
+    roles.forEach(role => {
+      const list = ROSTER.filter(c => c.role === role).sort((a, b) => a.name.localeCompare(b.name));
+      const group = document.createElement("div");
+      group.className = "role-group";
+      const label = document.createElement("p");
+      label.className = "role-label";
+      label.textContent = role + "s (" + list.length + ")";
+      group.appendChild(label);
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      list.forEach(c => {
+        const chip = document.createElement("div");
+        chip.className = "chip" + (enabled.has(c.name) ? "" : " off");
+        chip.title = c.name;
+
+        const portrait = document.createElement("div");
+        portrait.className = "chip-portrait";
+        portrait.appendChild(buildPortrait(c));
+        chip.appendChild(portrait);
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "chip-name";
+        nameSpan.textContent = c.name;
+        chip.appendChild(nameSpan);
+
+        chip.addEventListener("click", () => {
+          if (enabled.has(c.name)) enabled.delete(c.name);
+          else enabled.add(c.name);
+          chip.classList.toggle("off");
+          updateCount();
+          savePrefs();
+        });
+        chips.appendChild(chip);
+      });
+      group.appendChild(chips);
+      container.appendChild(group);
+    });
+    updateCount();
+  }
+
+  // Pick N unique characters from the pool. If pool is smaller than N,
+  // duplicates are allowed (so the UI doesn't break).
+  function pickSquad(n) {
+    const pool = ROSTER.filter(c => enabled.has(c.name));
+    if (pool.length === 0) return null;
+
+    const result = [];
+    if (pool.length >= n) {
+      // Shuffle and take first n for unique picks
+      const shuffled = pool.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(cryptoRandom() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.slice(0, n);
+    } else {
+      // Pool too small — allow duplicates
+      for (let i = 0; i < n; i++) {
+        result.push(pool[Math.floor(cryptoRandom() * pool.length)]);
+      }
+      return result;
+    }
+  }
+
+  function setSlot(idx, character) {
+    document.getElementById("name" + idx).textContent = character.name;
+    const roleEl = document.getElementById("role" + idx);
+    roleEl.textContent = character.role;
+    roleEl.className = "role " + roleClass[character.role];
+    roleEl.style.visibility = "visible";
+
+    const portraitEl = document.getElementById("portrait" + idx);
+    portraitEl.innerHTML = "";
+    portraitEl.className = "portrait " + roleClass[character.role];
+    portraitEl.appendChild(buildPortrait(character));
+  }
+
+  function showEmpty() {
+    for (let i = 1; i <= playerCount; i++) {
+      document.getElementById("name" + i).textContent = "Pool empty";
+      document.getElementById("role" + i).style.visibility = "hidden";
+      document.getElementById("portrait" + i).innerHTML = "?";
+    }
+  }
+
+  function roll() {
+    const squad = pickSquad(playerCount);
+    if (!squad) {
+      showEmpty();
+      return;
+    }
+
+    const slots = [];
+    for (let i = 1; i <= playerCount; i++) {
+      const s = document.getElementById("slot" + i);
+      s.classList.add("spinning");
+      slots.push(s);
+    }
+
+    let ticks = 0;
+    const interval = setInterval(() => {
+      const pool = ROSTER.filter(c => enabled.has(c.name));
+      if (pool.length > 0) {
+        for (let i = 1; i <= playerCount; i++) {
+          setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)]);
+        }
+      }
+      ticks++;
+      if (ticks >= 8) {
+        clearInterval(interval);
+        for (let i = 0; i < squad.length; i++) {
+          setSlot(i + 1, squad[i]);
+        }
+        slots.forEach(s => s.classList.remove("spinning"));
+      }
+    }, 80);
+  }
+
+  // Player count buttons
+  function setupPlayerCountButtons() {
+    const buttons = document.querySelectorAll("#pcButtons .pc-btn");
+    buttons.forEach(btn => {
+      const count = parseInt(btn.getAttribute("data-count"), 10);
+      if (count === playerCount) btn.classList.add("active");
+      else btn.classList.remove("active");
+
+      btn.addEventListener("click", () => {
+        playerCount = count;
+        buttons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderSlots();
+        savePrefs();
+      });
+    });
+  }
+
+  document.getElementById("rollBtn").addEventListener("click", roll);
+  document.addEventListener("keydown", (e) => {
+    if (e.code === "Space" && e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
+      e.preventDefault();
+      roll();
+    }
+  });
+
+  document.getElementById("enableAll").addEventListener("click", () => {
+    ROSTER.forEach(c => enabled.add(c.name));
+    renderPool();
+    savePrefs();
+  });
+  document.getElementById("disableAll").addEventListener("click", () => {
+    enabled.clear();
+    renderPool();
+    savePrefs();
+  });
+  document.querySelectorAll("[data-role]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      enabled.clear();
+      const role = btn.getAttribute("data-role");
+      ROSTER.filter(c => c.role === role).forEach(c => enabled.add(c.name));
+      renderPool();
+      savePrefs();
+    });
+  });
+
+  setupPlayerCountButtons();
+  renderSlots();
+  renderPool();
+</script>
+</body>
+</html>
