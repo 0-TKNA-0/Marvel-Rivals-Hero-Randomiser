@@ -1695,8 +1695,13 @@
         playerFilters[filterModalPlayerIdx] = myDisabled;
       }
       savePrefs();
-      // Refresh the slot's filter button styling
-      renderSlots();
+      // Surgically refresh just this player's filter button — avoids wiping displayed characters
+      const filterBtn = document.getElementById("filterBtn" + filterModalPlayerIdx);
+      if (filterBtn) {
+        const hasCustom = hasCustomFilter(filterModalPlayerIdx);
+        filterBtn.className = "filter-btn" + (hasCustom ? " has-custom" : "");
+        filterBtn.querySelector("span").textContent = hasCustom ? "Custom filter" : "Filter";
+      }
     }
     document.getElementById("filterModal").classList.remove("open");
     document.body.style.overflow = "";
@@ -2150,15 +2155,20 @@
     }
     const picks = shuffled.slice(0, 3);
     for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.add("spinning");
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const TOTAL = 8;
     let ticks = 0;
     const interval = setInterval(() => {
       for (let i = 1; i <= 3; i++)
         setBanSlot(i, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
-      if (++ticks >= 8) {
+      if (ac) playTick(ac, 1 - ticks / TOTAL);
+      if (++ticks >= TOTAL) {
         clearInterval(interval);
         currentBans = picks.slice();
         picks.forEach((c, i) => setBanSlot(i + 1, c, true));
         for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.remove("spinning");
+        if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
@@ -2173,14 +2183,19 @@
     const slotEl = document.getElementById("banSlot" + banIdx);
     slotEl.classList.add("spinning");
     document.getElementById("banPortrait" + banIdx).onclick = null;
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const TOTAL = 8;
     let ticks = 0;
     const interval = setInterval(() => {
       setBanSlot(banIdx, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
-      if (++ticks >= 8) {
+      if (ac) playTick(ac, 1 - ticks / TOTAL);
+      if (++ticks >= TOTAL) {
         clearInterval(interval);
         currentBans[banIdx - 1] = picked;
         setBanSlot(banIdx, picked, true);
         slotEl.classList.remove("spinning");
+        if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
@@ -2359,15 +2374,17 @@
             ? "With only 1 player, characters reroll from the pool."
             : "Players rotate characters between each other in a cycle.");
 
-      // Next round button is enabled only when (a) there's a current squad
-      // and (b) we haven't run all rounds yet.
+      // Next Round visible while rounds remain; Reset visible only once all rounds are done.
       const btn = document.getElementById("nextRoundBtn");
+      const resetBtn = document.getElementById("resetRoundsBtn");
       const hasSquad = currentSquad.length > 0;
       const moreRounds = currentRound < total;
-      btn.disabled = !(hasSquad && moreRounds);
-      btn.textContent = moreRounds
-        ? ("↻ Next round (→ " + (currentRound + 1) + ")")
-        : "✓ Final round";
+
+      btn.style.display = moreRounds ? "" : "none";
+      btn.disabled = !hasSquad;
+      btn.textContent = "↻ Next round (→ " + (currentRound + 1) + ")";
+
+      resetBtn.style.display = moreRounds ? "none" : "";
     } else {
       counter.style.display = "none";
     }
