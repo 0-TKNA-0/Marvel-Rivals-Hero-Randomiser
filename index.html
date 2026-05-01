@@ -1664,6 +1664,39 @@
   }
   function hasCustomFilter(idx) { return !!playerFilters[idx]; }
 
+  function serializeStringList(list) {
+    const out = {};
+    (list || []).forEach((name, idx) => { out[idx] = name; });
+    return out;
+  }
+
+  function deserializeStringList(value) {
+    if (Array.isArray(value)) return value.filter(v => typeof v === "string");
+    if (!value || typeof value !== "object") return [];
+    return Object.keys(value)
+      .sort((a, b) => Number(a) - Number(b))
+      .map(k => value[k])
+      .filter(v => typeof v === "string");
+  }
+
+  function serializePlayerFiltersMap(filters) {
+    const out = {};
+    Object.keys(filters || {}).forEach(playerIdx => {
+      out[playerIdx] = serializeStringList(filters[playerIdx] || []);
+    });
+    return out;
+  }
+
+  function deserializePlayerFiltersMap(value) {
+    const out = {};
+    if (!value || typeof value !== "object") return out;
+    Object.keys(value).forEach(playerIdx => {
+      const disabled = deserializeStringList(value[playerIdx]);
+      if (disabled.length > 0) out[playerIdx] = disabled;
+    });
+    return out;
+  }
+
   function getInitials(name) {
     return name.split(/[\s&-]+/).filter(w => w.length > 0).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   }
@@ -2262,6 +2295,7 @@
   function rollSimple() {
     const squad = pickSquad(playerCount);
     if (!squad) { showEmpty(); return; }
+    publishState("roll", null, { squad: squad.slice(), currentRound: 1 });
     const slots = [];
     const slotPools = [];
     for (let i = 1; i <= playerCount; i++) {
@@ -2288,7 +2322,6 @@
         slots.forEach(s => s.classList.remove("spinning"));
         if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
         onSquadRollComplete();
-        publishState("roll");
       }
     }, 80);
   }
@@ -2303,6 +2336,9 @@
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    const nextSquad = currentSquad.slice();
+    nextSquad[playerIdx - 1] = picked;
+    publishState("rollOne", { playerIdx: playerIdx }, { squad: nextSquad });
     const slotEl = document.getElementById("slot" + playerIdx);
     slotEl.classList.add("spinning");
     document.getElementById("portrait" + playerIdx).onclick = null;
@@ -2319,7 +2355,6 @@
         setSlot(playerIdx, picked, true);
         slotEl.classList.remove("spinning");
         if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
-        publishState("rollOne", { playerIdx: playerIdx });
       }
     }, 80);
   }
@@ -2328,6 +2363,7 @@
   function rollCS() {
     const squad = pickSquad(playerCount);
     if (!squad) { showEmpty(); return; }
+    publishState("roll", null, { squad: squad.slice(), currentRound: 1 });
     showReelOverlay(
       squad.map((winner, i) => ({
         label: getPlayerName(i + 1),
@@ -2335,7 +2371,7 @@
         pool: getPlayerPool(i + 1)
       })),
       ROLL_DUR, false,
-      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); onSquadRollComplete(); publishState("roll"); }
+      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); onSquadRollComplete(); }
     );
   }
 
@@ -2349,11 +2385,14 @@
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    const nextSquad = currentSquad.slice();
+    nextSquad[playerIdx - 1] = picked;
+    publishState("rollOne", { playerIdx: playerIdx }, { squad: nextSquad });
     document.getElementById("portrait" + playerIdx).onclick = null;
     showReelOverlay(
       [{ label: getPlayerName(playerIdx), winner: picked, pool: pickFrom }],
       SINGLE_DUR, false,
-      () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); publishState("rollOne", { playerIdx: playerIdx }); }
+      () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); }
     );
   }
 
@@ -2412,6 +2451,7 @@
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const picks = shuffled.slice(0, 3);
+    publishState("rollBans", null, { bans: picks.slice() });
     for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.add("spinning");
     let ac = null;
     try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
@@ -2427,7 +2467,6 @@
         picks.forEach((c, i) => setBanSlot(i + 1, c, true));
         for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.remove("spinning");
         if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
-        publishState("rollBans");
       }
     }, 80);
   }
@@ -2439,6 +2478,9 @@
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    const nextBans = currentBans.slice();
+    nextBans[banIdx - 1] = picked;
+    publishState("rollOneBan", { banIdx: banIdx }, { bans: nextBans });
     const slotEl = document.getElementById("banSlot" + banIdx);
     slotEl.classList.add("spinning");
     document.getElementById("banPortrait" + banIdx).onclick = null;
@@ -2455,7 +2497,6 @@
         setBanSlot(banIdx, picked, true);
         slotEl.classList.remove("spinning");
         if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
-        publishState("rollOneBan", { banIdx: banIdx });
       }
     }, 80);
   }
@@ -2467,10 +2508,11 @@
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const picks = shuffled.slice(0, 3);
+    publishState("rollBans", null, { bans: picks.slice() });
     showReelOverlay(
       picks.map((winner, i) => ({ label: "Ban " + (i + 1), winner, pool: BAN_ROSTER })),
       ROLL_DUR, true,
-      () => { currentBans = picks.slice(); picks.forEach((c, i) => setBanSlot(i + 1, c, true)); publishState("rollBans"); }
+      () => { currentBans = picks.slice(); picks.forEach((c, i) => setBanSlot(i + 1, c, true)); }
     );
   }
 
@@ -2481,11 +2523,14 @@
     const candidates = pickFrom.filter(c => !current || c.name !== current.name);
     const finalPool = candidates.length > 0 ? candidates : pickFrom;
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+    const nextBans = currentBans.slice();
+    nextBans[banIdx - 1] = picked;
+    publishState("rollOneBan", { banIdx: banIdx }, { bans: nextBans });
     document.getElementById("banPortrait" + banIdx).onclick = null;
     showReelOverlay(
       [{ label: "Ban " + banIdx, winner: picked, pool: pickFrom }],
       SINGLE_DUR, true,
-      () => { currentBans[banIdx - 1] = picked; setBanSlot(banIdx, picked, true); publishState("rollOneBan", { banIdx: banIdx }); }
+      () => { currentBans[banIdx - 1] = picked; setBanSlot(banIdx, picked, true); }
     );
   }
 
@@ -2938,23 +2983,25 @@
   }
 
   // Low-level state push (skips the isApplyingRemoteState guard intentionally — called locally)
-  function _pushStateNow(action, details) {
+  function _pushStateNow(action, details, overrides) {
     if (!lobbyRef) return;
+    const nextSquad = overrides && overrides.squad ? overrides.squad : currentSquad;
+    const nextBans = overrides && overrides.bans ? overrides.bans : currentBans;
     const state = {
       _from: MY_UID,
       _action: action || "update",
       _details: details || null,
       _t: Date.now(),
-      playerCount,
+      playerCount: overrides && typeof overrides.playerCount === "number" ? overrides.playerCount : playerCount,
       csMode,
-      gamemode,
-      swapModeReroll,
-      currentRound,
-      squad: currentSquad.map(c => c ? c.name : null),
-      bans: currentBans.map(c => c ? c.name : null),
-      enabled: ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name),
-      playerFilters: playerFilters || {},
-      playerNames: playerNames || {},
+      gamemode: overrides && overrides.gamemode ? overrides.gamemode : gamemode,
+      swapModeReroll: overrides && typeof overrides.swapModeReroll === "boolean" ? overrides.swapModeReroll : swapModeReroll,
+      currentRound: overrides && typeof overrides.currentRound === "number" ? overrides.currentRound : currentRound,
+      squad: nextSquad.map(c => c ? c.name : null),
+      bans: nextBans.map(c => c ? c.name : null),
+      enabled: serializeStringList(ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name)),
+      playerFilters: overrides && overrides.playerFilters ? serializePlayerFiltersMap(overrides.playerFilters) : serializePlayerFiltersMap(playerFilters || {}),
+      playerNames: overrides && overrides.playerNames ? overrides.playerNames : (playerNames || {}),
     };
     lobbyRef.child("state").set(state).catch(err => console.warn("[Lobby] publish err:", err));
   }
@@ -3000,10 +3047,10 @@
     return msgs[action] || null;
   }
 
-  function publishState(action, details) {
+  function publishState(action, details, overrides) {
     if (!lobbyRef || !lobbyCode) return;
     if (isApplyingRemoteState) return;
-    _pushStateNow(action, details);
+    _pushStateNow(action, details, overrides);
     const msg = buildActivityMessage(action, details);
     if (msg) pushActivity(msg);
   }
@@ -3110,15 +3157,21 @@
       // Current round
       if (typeof st.currentRound === "number") currentRound = st.currentRound;
       // Enabled pool
-      if (Array.isArray(st.enabled)) {
+      const sharedDisabled = deserializeStringList(st.enabled);
+      if (Array.isArray(st.enabled) || (st.enabled && typeof st.enabled === "object")) {
         ROSTER.forEach(c => enabled.add(c.name));
-        st.enabled.forEach(n => enabled.delete(n));
+        sharedDisabled.forEach(n => enabled.delete(n));
         renderPool();
         updateCount();
+        if (filterModalPlayerIdx != null) {
+          filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
+          renderFilterGrid();
+          updateFilterSummary();
+        }
       }
       // Player filters
-      if (st.playerFilters) {
-        playerFilters = st.playerFilters;
+      if (st.playerFilters && typeof st.playerFilters === "object") {
+        playerFilters = deserializePlayerFiltersMap(st.playerFilters);
         for (let i = 1; i <= playerCount; i++) {
           const fb = document.getElementById("filterBtn" + i);
           if (fb) {
@@ -3127,6 +3180,12 @@
             fb.querySelector("span").textContent = hasCustom ? "Custom filter" : "Filter";
           }
         }
+        if (filterModalPlayerIdx != null) {
+          document.getElementById("filterPlayerName").textContent = getPlayerName(filterModalPlayerIdx);
+          filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
+          renderFilterGrid();
+          updateFilterSummary();
+        }
       }
       // Player names
       if (st.playerNames) {
@@ -3134,6 +3193,10 @@
         for (let i = 1; i <= playerCount; i++) {
           const inp = document.querySelector("#slot" + i + " input[type=text]");
           if (inp) inp.value = getPlayerName(i);
+        }
+        if (filterModalPlayerIdx != null) {
+          document.getElementById("filterPlayerName").textContent = getPlayerName(filterModalPlayerIdx);
+          updateFilterSummary();
         }
       }
       // Squad
