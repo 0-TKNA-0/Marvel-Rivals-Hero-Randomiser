@@ -64,11 +64,11 @@
   .subtitle { color: #6b6a64; font-size: 12px; margin: 0 0 1rem; }
   .site-version {
     display: inline-block;
-    margin: 0 0 1rem;
-    padding: 3px 8px;
+    margin-top: 12px;
+    padding: 4px 8px;
     border: 1px solid #20232a;
     border-radius: 999px;
-    background: #11141a;
+    background: #14161b;
     color: #6b6a64;
     font-size: 10px;
     font-weight: 700;
@@ -325,6 +325,9 @@
     margin-bottom: 0.625rem;
     flex-wrap: wrap;
   }
+  .player-count-row .mode-toggle {
+    margin-left: auto;
+  }
   .player-count-label {
     font-size: 11px;
     color: #6b6a64;
@@ -356,6 +359,13 @@
   .pc-btn.active {
     background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
+  }
+  @media (max-width: 700px) {
+    .player-count-row .mode-toggle {
+      margin-left: 0;
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
 
   .slots {
@@ -1350,7 +1360,6 @@
     <div>
       <h1>Marvel Rivals Squad Randomizer</h1>
       <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
-      <span class="site-version">v1.0.1</span>
     </div>
     <button class="lobby-btn" id="lobbyBtn">🔗 Lobby</button>
     <button class="settings-cog" id="settingsCog" aria-label="Settings" aria-expanded="false">
@@ -1382,6 +1391,7 @@
           <span class="theme-swatch-name">Classic</span>
         </button>
       </div>
+      <span class="site-version">v1.0.3</span>
     </div>
   </div>
 
@@ -1390,13 +1400,6 @@
     <button class="tab-btn" data-tab="bans">🚫 Bans</button>
   </div>
 
-  <div class="mode-row">
-    <label class="mode-toggle" id="modeToggle">
-      <input type="checkbox" id="csModeCheck">
-      <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      <span class="toggle-label">CS Case Opening Mode</span>
-    </label>
-  </div>
 
   <!-- Compact lobby bar — shown when in a lobby on smaller screens -->
   <div class="lobby-compact-bar" id="lobbyCompactBar">
@@ -1427,6 +1430,11 @@
       <button class="pc-btn" data-count="5">5</button>
       <button class="pc-btn" data-count="6">6</button>
     </div>
+    <label class="mode-toggle" id="modeToggle">
+      <input type="checkbox" id="csModeCheck">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span class="toggle-label">Character Slider Mode</span>
+    </label>
   </div>
 
   <div class="slots cols-2" id="slotsContainer"></div>
@@ -1793,15 +1801,20 @@
 
       // Portrait + name + role
       const portrait = document.createElement("div");
-      portrait.className = "portrait";
+      portrait.className = "portrait rerollable";
       portrait.id = "portrait" + i;
       portrait.textContent = "?";
+      portrait.title = "Click to roll this player";
+      portrait.onclick = () => rollOne(i);
       slot.appendChild(portrait);
 
       const heroName = document.createElement("p");
       heroName.className = "name";
       heroName.id = "name" + i;
       heroName.textContent = "Press randomize";
+      heroName.style.cursor = "pointer";
+      heroName.title = "Click to roll this player";
+      heroName.onclick = () => rollOne(i);
       slot.appendChild(heroName);
 
       const roleWrap = document.createElement("div");
@@ -2106,7 +2119,11 @@
   }
 
   function setSlot(idx, character, rerollable) {
-    document.getElementById("name" + idx).textContent = character.name;
+    const nameEl = document.getElementById("name" + idx);
+    nameEl.textContent = character.name;
+    nameEl.style.cursor = rerollable ? "pointer" : "";
+    nameEl.title = rerollable ? "Click to re-roll this player" : "";
+    nameEl.onclick = rerollable ? () => rollOne(idx) : null;
     const roleEl = document.getElementById("role" + idx);
     roleEl.textContent = character.role;
     roleEl.className = "role " + roleClass[character.role];
@@ -2122,9 +2139,17 @@
 
   function showEmpty() {
     for (let i = 1; i <= playerCount; i++) {
-      document.getElementById("name" + i).textContent = "Pool empty";
+      const nameEl = document.getElementById("name" + i);
+      nameEl.textContent = "Pool empty";
+      nameEl.style.cursor = "";
+      nameEl.title = "";
+      nameEl.onclick = null;
       document.getElementById("role" + i).style.visibility = "hidden";
-      document.getElementById("portrait" + i).innerHTML = "?";
+      const portraitEl = document.getElementById("portrait" + i);
+      portraitEl.innerHTML = "?";
+      portraitEl.className = "portrait";
+      portraitEl.title = "";
+      portraitEl.onclick = null;
     }
   }
 
