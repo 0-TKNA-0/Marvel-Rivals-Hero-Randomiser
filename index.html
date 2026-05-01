@@ -1282,6 +1282,18 @@
   .lobby-modal-divider::before, .lobby-modal-divider::after {
     content: ""; flex: 1; height: 1px; background: #2a2d38;
   }
+  .legal-disclaimer {
+    margin: 28px auto 0;
+    max-width: 720px;
+    padding: 14px 16px;
+    border: 1px solid #1a1d24;
+    border-radius: 10px;
+    background: #11141a;
+    color: #6b6a64;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+  .legal-disclaimer p { margin: 0; }
 </style>
 </head>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1308,7 +1320,7 @@
     <p class="lobby-modal-title">🔗 Lobby</p>
     <p class="lobby-modal-sub">Share a code so friends can see and roll together in real time.</p>
     <label for="lobbyNameInput">Your name</label>
-    <input type="text" id="lobbyNameInput" maxlength="24" placeholder="e.g. Brody" autocomplete="off">
+    <input type="text" id="lobbyNameInput" maxlength="24" placeholder="Enter your name" autocomplete="off">
     <button class="lobby-modal-create" id="lobbyModalCreate">✨ Create lobby</button>
     <div class="lobby-modal-divider">or join existing</div>
     <label for="lobbyCodeInput">Lobby code</label>
@@ -1465,6 +1477,11 @@
       <button class="btn-primary" id="rollBansBtn">🚫 Randomize Bans &nbsp;<span style="opacity:0.7;font-size:12px;">(or press space)</span></button>
     </div>
   </div><!-- end panel-bans -->
+</div>
+
+<div class="legal-disclaimer">
+  <p>This is an unofficial fan-made project and is not affiliated with, endorsed by, sponsored by, or approved by Marvel, Marvel Games, Disney, NetEase Games, or the creators and publishers of Marvel Rivals.</p>
+  <p style="margin-top:8px;">All Marvel-related names, characters, images, and trademarks remain the property of their respective owners.</p>
 </div>
 
 <!-- Per-player filter modal -->
@@ -3057,7 +3074,8 @@
 
   function pushActivity(msg) {
     if (!lobbyRef) return;
-    lobbyRef.child("activity").push({ msg, t: Date.now() });
+    const entryRef = lobbyRef.child("activity").push();
+    entryRef.set({ msg, t: Date.now(), by: MY_UID }).catch(err => console.warn("[Lobby] activity err:", err));
   }
 
   function animateRemoteSquad(nextSquad, details) {
@@ -3066,6 +3084,8 @@
     else for (let i = 1; i <= playerCount; i++) idxs.push(i);
     const totalTicks = 6;
     let ticks = 0;
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
     idxs.forEach(idx => {
       const slot = document.getElementById("slot" + idx);
       if (slot) slot.classList.add("spinning");
@@ -3077,6 +3097,7 @@
         const pool = getPlayerPool(idx);
         if (pool.length > 0) setSlot(idx, pool[Math.floor(cryptoRandom() * pool.length)], false);
       });
+      if (ac) playTick(ac, 1 - ticks / totalTicks);
       if (++ticks >= totalTicks) {
         clearInterval(interval);
         currentSquad = nextSquad.slice();
@@ -3086,6 +3107,8 @@
           const slot = document.getElementById("slot" + idx);
           if (slot) slot.classList.remove("spinning");
         });
+        if (details && details.playerIdx == null) onSquadRollComplete();
+        if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
@@ -3096,6 +3119,8 @@
     else for (let i = 1; i <= 3; i++) idxs.push(i);
     const totalTicks = 6;
     let ticks = 0;
+    let ac = null;
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
     idxs.forEach(idx => {
       const slot = document.getElementById("banSlot" + idx);
       if (slot) slot.classList.add("spinning");
@@ -3107,6 +3132,7 @@
         if (BAN_ROSTER.length === 0) return;
         setBanSlot(idx, BAN_ROSTER[Math.floor(cryptoRandom() * BAN_ROSTER.length)], false);
       });
+      if (ac) playTick(ac, 1 - ticks / totalTicks);
       if (++ticks >= totalTicks) {
         clearInterval(interval);
         currentBans = nextBans.slice();
@@ -3116,6 +3142,7 @@
           const slot = document.getElementById("banSlot" + idx);
           if (slot) slot.classList.remove("spinning");
         });
+        if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
       }
     }, 80);
   }
@@ -3158,34 +3185,30 @@
       if (typeof st.currentRound === "number") currentRound = st.currentRound;
       // Enabled pool
       const sharedDisabled = deserializeStringList(st.enabled);
-      if (Array.isArray(st.enabled) || (st.enabled && typeof st.enabled === "object")) {
-        ROSTER.forEach(c => enabled.add(c.name));
-        sharedDisabled.forEach(n => enabled.delete(n));
-        renderPool();
-        updateCount();
-        if (filterModalPlayerIdx != null) {
-          filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
-          renderFilterGrid();
-          updateFilterSummary();
-        }
+      ROSTER.forEach(c => enabled.add(c.name));
+      sharedDisabled.forEach(n => enabled.delete(n));
+      renderPool();
+      updateCount();
+      if (filterModalPlayerIdx != null) {
+        filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
+        renderFilterGrid();
+        updateFilterSummary();
       }
       // Player filters
-      if (st.playerFilters && typeof st.playerFilters === "object") {
-        playerFilters = deserializePlayerFiltersMap(st.playerFilters);
-        for (let i = 1; i <= playerCount; i++) {
-          const fb = document.getElementById("filterBtn" + i);
-          if (fb) {
-            const hasCustom = hasCustomFilter(i);
-            fb.className = "filter-btn" + (hasCustom ? " has-custom" : "");
-            fb.querySelector("span").textContent = hasCustom ? "Custom filter" : "Filter";
-          }
+      playerFilters = deserializePlayerFiltersMap(st.playerFilters);
+      for (let i = 1; i <= playerCount; i++) {
+        const fb = document.getElementById("filterBtn" + i);
+        if (fb) {
+          const hasCustom = hasCustomFilter(i);
+          fb.className = "filter-btn" + (hasCustom ? " has-custom" : "");
+          fb.querySelector("span").textContent = hasCustom ? "Custom filter" : "Filter";
         }
-        if (filterModalPlayerIdx != null) {
-          document.getElementById("filterPlayerName").textContent = getPlayerName(filterModalPlayerIdx);
-          filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
-          renderFilterGrid();
-          updateFilterSummary();
-        }
+      }
+      if (filterModalPlayerIdx != null) {
+        document.getElementById("filterPlayerName").textContent = getPlayerName(filterModalPlayerIdx);
+        filterModalSet = new Set(getPlayerEnabled(filterModalPlayerIdx));
+        renderFilterGrid();
+        updateFilterSummary();
       }
       // Player names
       if (st.playerNames) {
