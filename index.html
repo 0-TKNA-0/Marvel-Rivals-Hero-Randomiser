@@ -1088,15 +1088,194 @@
   /* CS mode toggle (legacy block kept for safety) */
   .legacy-cs-removed { display: none; }
   /* removed duplicate mode-toggle block — see top of stylesheet */
+
+  /* ── Lobby system ──────────────────────────────────────────────────── */
+  .lobby-btn {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border: none; border-radius: 8px; color: #fff; cursor: pointer;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 7px 13px; text-transform: uppercase; flex-shrink: 0;
+    transition: opacity 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+  .lobby-btn:hover { opacity: 0.88; }
+  .lobby-btn.in-lobby {
+    background: linear-gradient(135deg, #34d399, #14b8a6);
+    font-family: monospace; font-size: 13px; letter-spacing: 0.12em;
+  }
+
+  /* Compact bar inside container (shown when in a lobby) */
+  .lobby-compact-bar {
+    display: none;
+    align-items: center; gap: 10px;
+    background: #14161b; border: 1px solid #20232a; border-radius: 8px;
+    padding: 8px 12px; margin-bottom: 0.875rem; font-size: 12px;
+  }
+  .lobby-compact-bar.visible { display: flex; }
+  .lobby-compact-label { color: #6b6a64; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .lobby-compact-code {
+    font-family: monospace; font-size: 15px; font-weight: 700;
+    color: var(--accent-1); letter-spacing: 0.12em; cursor: pointer;
+    user-select: all;
+  }
+  .lobby-compact-code:hover { opacity: 0.8; }
+  .lobby-compact-members { color: #7a7875; font-size: 11px; flex: 1; }
+  .lobby-compact-leave {
+    background: none; border: 1px solid #333; border-radius: 5px;
+    color: #7a7875; cursor: pointer; font-size: 11px; padding: 3px 8px;
+    transition: all 0.12s;
+  }
+  .lobby-compact-leave:hover { border-color: #e07070; color: #e07070; }
+
+  /* Sidebars — fixed, only visible on wide screens */
+  .lobby-sidebar {
+    position: fixed; top: 0; bottom: 0; width: 210px;
+    background: #0d0f14; border: 1px solid #1e2028; overflow: hidden;
+    flex-direction: column; padding: 16px 12px; gap: 12px; z-index: 10;
+    display: none;
+  }
+  .lobby-sidebar.visible { display: flex; }
+  @media (min-width: 1300px) { .lobby-sidebar.visible { display: flex; } }
+  .lobby-sidebar-left  { left: 0;  border-left: none;  border-radius: 0 10px 10px 0; }
+  .lobby-sidebar-right { right: 0; border-right: none; border-radius: 10px 0 0 10px; }
+  .lobby-sidebar-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #6b6a64; border-bottom: 1px solid #1e2028; padding-bottom: 8px; flex-shrink: 0;
+  }
+  .lobby-code-display {
+    font-family: monospace; font-size: 24px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--accent-1); text-align: center; padding: 8px 0; cursor: pointer;
+    user-select: all; transition: opacity 0.12s;
+  }
+  .lobby-code-display:hover { opacity: 0.75; }
+  .lobby-code-hint { font-size: 10px; color: #444; text-align: center; margin-top: -6px; flex-shrink: 0; }
+  .lobby-members-list {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;
+  }
+  .lobby-member-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 7px; border-radius: 6px; background: #14161b;
+  }
+  .lobby-member-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #34d399; flex-shrink: 0;
+  }
+  .lobby-member-name {
+    font-size: 12px; color: #c8c6c1; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .lobby-member-you { font-size: 10px; color: #555; }
+  .lobby-leave-btn {
+    background: none; border: 1px solid #2a2d38; border-radius: 6px;
+    color: #666; cursor: pointer; font-size: 11px; padding: 6px;
+    text-align: center; width: 100%; transition: all 0.12s; flex-shrink: 0;
+  }
+  .lobby-leave-btn:hover { border-color: #e07070; color: #e07070; }
+  .lobby-feed {
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+  }
+  .lobby-feed-item {
+    font-size: 11px; color: #6b6a64; padding: 4px 6px; border-radius: 4px;
+    background: #14161b; line-height: 1.4;
+  }
+
+  /* Lobby modal */
+  .lobby-modal-backdrop {
+    position: fixed; inset: 0; background: rgba(8,10,14,0.87);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.18s;
+  }
+  .lobby-modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .lobby-modal {
+    background: #16181e; border: 1px solid #2a2d38; border-radius: 14px;
+    padding: 28px 28px 24px; width: 340px; max-width: 95vw; position: relative;
+  }
+  .lobby-modal-title { font-size: 17px; font-weight: 700; color: #e8e6e1; margin: 0 0 4px; }
+  .lobby-modal-sub   { font-size: 12px; color: #6b6a64; margin: 0 0 20px; }
+  .lobby-modal label {
+    display: block; font-size: 10px; font-weight: 700; color: #888;
+    letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .lobby-modal input {
+    width: 100%; box-sizing: border-box; background: #0d0f14;
+    border: 1px solid #2a2d38; border-radius: 7px; color: #e8e6e1;
+    font-size: 14px; padding: 9px 12px; margin-bottom: 12px;
+    outline: none; transition: border-color 0.12s;
+  }
+  .lobby-modal input:focus { border-color: var(--accent-1); }
+  .lobby-modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .lobby-modal-create {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border: none; border-radius: 8px; color: #fff; cursor: pointer;
+    font-size: 13px; font-weight: 700; padding: 11px; width: 100%; transition: opacity 0.15s;
+  }
+  .lobby-modal-create:hover { opacity: 0.88; }
+  .lobby-modal-create:disabled { opacity: 0.5; cursor: not-allowed; }
+  .lobby-modal-join {
+    background: #20232a; border: 1px solid #2a2d38; border-radius: 8px;
+    color: #c8c6c1; cursor: pointer; font-size: 13px; font-weight: 600;
+    padding: 10px; width: 100%; transition: background 0.12s;
+  }
+  .lobby-modal-join:hover { background: #2a2d38; }
+  .lobby-modal-join:disabled { opacity: 0.5; cursor: not-allowed; }
+  .lobby-modal-close {
+    position: absolute; top: 12px; right: 14px;
+    background: none; border: none; color: #555; cursor: pointer; font-size: 20px; line-height: 1;
+  }
+  .lobby-modal-close:hover { color: #e8e6e1; }
+  .lobby-modal-err { color: #e07070; font-size: 12px; margin: -6px 0 10px; display: none; }
+  .lobby-modal-err.visible { display: block; }
+  .lobby-modal-divider {
+    display: flex; align-items: center; gap: 10px; margin: 4px 0 10px;
+    color: #444; font-size: 11px;
+  }
+  .lobby-modal-divider::before, .lobby-modal-divider::after {
+    content: ""; flex: 1; height: 1px; background: #2a2d38;
+  }
 </style>
 </head>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <body>
+
+<!-- Lobby sidebars (fixed, wide screens only) -->
+<div class="lobby-sidebar lobby-sidebar-left" id="lobbySidebarLeft">
+  <p class="lobby-sidebar-title">Lobby</p>
+  <div class="lobby-code-display" id="lobbySidebarCode" title="Click to copy">——————</div>
+  <p class="lobby-code-hint">Click to copy code</p>
+  <div class="lobby-members-list" id="lobbyMembersList"></div>
+  <button class="lobby-leave-btn" id="lobbySidebarLeave">Leave lobby</button>
+</div>
+<div class="lobby-sidebar lobby-sidebar-right" id="lobbySidebarRight">
+  <p class="lobby-sidebar-title">Activity</p>
+  <div class="lobby-feed" id="lobbyFeed"></div>
+</div>
+
+<!-- Lobby modal -->
+<div class="lobby-modal-backdrop" id="lobbyModal">
+  <div class="lobby-modal">
+    <button class="lobby-modal-close" id="lobbyModalClose">×</button>
+    <p class="lobby-modal-title">🔗 Lobby</p>
+    <p class="lobby-modal-sub">Share a code so friends can see and roll together in real time.</p>
+    <label for="lobbyNameInput">Your name</label>
+    <input type="text" id="lobbyNameInput" maxlength="24" placeholder="e.g. Brody" autocomplete="off">
+    <button class="lobby-modal-create" id="lobbyModalCreate">✨ Create lobby</button>
+    <div class="lobby-modal-divider">or join existing</div>
+    <label for="lobbyCodeInput">Lobby code</label>
+    <input type="text" id="lobbyCodeInput" maxlength="6" placeholder="e.g. ABC123" autocomplete="off" style="letter-spacing:0.12em;font-family:monospace;font-size:15px;">
+    <p class="lobby-modal-err" id="lobbyModalErr"></p>
+    <div class="lobby-modal-actions">
+      <button class="lobby-modal-join" id="lobbyModalJoin">Join lobby</button>
+    </div>
+  </div>
+</div>
+
 <div class="container">
   <div class="header-row">
     <div>
       <h1>Marvel Rivals Squad Randomizer</h1>
       <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
     </div>
+    <button class="lobby-btn" id="lobbyBtn">🔗 Lobby</button>
     <button class="settings-cog" id="settingsCog" aria-label="Settings" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="3"></circle>
@@ -1140,6 +1319,14 @@
       <span class="toggle-track"><span class="toggle-thumb"></span></span>
       <span class="toggle-label">CS Case Opening Mode</span>
     </label>
+  </div>
+
+  <!-- Compact lobby bar — shown when in a lobby on smaller screens -->
+  <div class="lobby-compact-bar" id="lobbyCompactBar">
+    <span class="lobby-compact-label">Lobby</span>
+    <span class="lobby-compact-code" id="lobbyCompactCode" title="Click to copy">——————</span>
+    <span class="lobby-compact-members" id="lobbyCompactMembers">Just you</span>
+    <button class="lobby-compact-leave" id="lobbyCompactLeave">Leave</button>
   </div>
 
   <div class="panel active" id="panel-squad">
@@ -1463,6 +1650,7 @@
         const v = nameInput.value.trim();
         if (v) playerNames[i] = v; else { delete playerNames[i]; nameInput.value = getPlayerName(i); }
         savePrefs();
+        publishState("playerNames");
         // refresh filter button label if open later — done lazily on open
       });
       nameInput.addEventListener("keydown", e => { if (e.key === "Enter") nameInput.blur(); });
@@ -1618,7 +1806,7 @@
 
   function renderPool() {
     const grid = document.getElementById("poolGrid");
-    renderHeroGrid(grid, enabled, poolRoleFilter, () => { updateCount(); savePrefs(); });
+    renderHeroGrid(grid, enabled, poolRoleFilter, () => { updateCount(); savePrefs(); publishState("pool"); });
     updateCount();
   }
 
@@ -1695,6 +1883,7 @@
         playerFilters[filterModalPlayerIdx] = myDisabled;
       }
       savePrefs();
+      publishState("filter");
       // Surgically refresh just this player's filter button — avoids wiping displayed characters
       const filterBtn = document.getElementById("filterBtn" + filterModalPlayerIdx);
       if (filterBtn) {
@@ -2032,6 +2221,7 @@
         slots.forEach(s => s.classList.remove("spinning"));
         if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
         onSquadRollComplete();
+        publishState("roll");
       }
     }, 80);
   }
@@ -2062,6 +2252,7 @@
         setSlot(playerIdx, picked, true);
         slotEl.classList.remove("spinning");
         if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
+        publishState("rollOne");
       }
     }, 80);
   }
@@ -2077,7 +2268,7 @@
         pool: getPlayerPool(i + 1)
       })),
       ROLL_DUR, false,
-      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); onSquadRollComplete(); }
+      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); onSquadRollComplete(); publishState("roll"); }
     );
   }
 
@@ -2095,7 +2286,7 @@
     showReelOverlay(
       [{ label: getPlayerName(playerIdx), winner: picked, pool: pickFrom }],
       SINGLE_DUR, false,
-      () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); }
+      () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); publishState("rollOne"); }
     );
   }
 
@@ -2169,6 +2360,7 @@
         picks.forEach((c, i) => setBanSlot(i + 1, c, true));
         for (let i = 1; i <= 3; i++) document.getElementById("banSlot" + i).classList.remove("spinning");
         if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
+        publishState("rollBans");
       }
     }, 80);
   }
@@ -2196,6 +2388,7 @@
         setBanSlot(banIdx, picked, true);
         slotEl.classList.remove("spinning");
         if (ac) { playReveal(ac, true); setTimeout(() => ac.close().catch(() => {}), 2000); }
+        publishState("rollOneBan");
       }
     }, 80);
   }
@@ -2210,7 +2403,7 @@
     showReelOverlay(
       picks.map((winner, i) => ({ label: "Ban " + (i + 1), winner, pool: BAN_ROSTER })),
       ROLL_DUR, true,
-      () => { currentBans = picks.slice(); picks.forEach((c, i) => setBanSlot(i + 1, c, true)); }
+      () => { currentBans = picks.slice(); picks.forEach((c, i) => setBanSlot(i + 1, c, true)); publishState("rollBans"); }
     );
   }
 
@@ -2225,7 +2418,7 @@
     showReelOverlay(
       [{ label: "Ban " + banIdx, winner: picked, pool: pickFrom }],
       SINGLE_DUR, true,
-      () => { currentBans[banIdx - 1] = picked; setBanSlot(banIdx, picked, true); }
+      () => { currentBans[banIdx - 1] = picked; setBanSlot(banIdx, picked, true); publishState("rollOneBan"); }
     );
   }
 
@@ -2274,6 +2467,7 @@
         roundHistory = [];
         if (typeof updateRoundModeUI === "function") updateRoundModeUI();
         savePrefs();
+        publishState("playerCount");
       });
     });
   }
@@ -2311,6 +2505,7 @@
   csModeCheck.addEventListener("change", () => {
     csMode = csModeCheck.checked;
     savePrefs();
+    publishState("csMode");
   });
 
   // ── Settings cog & theme picker ────────────────────────────────────────
@@ -2398,6 +2593,7 @@
         roundHistory = currentSquad.length > 0 ? [currentSquad.slice()] : [];
         savePrefs();
         updateRoundModeUI();
+        publishState("gamemode");
       });
     });
 
@@ -2405,6 +2601,7 @@
       swapModeReroll = e.target.checked;
       savePrefs();
       updateRoundModeUI();
+      publishState("swapMode");
     });
 
     document.getElementById("nextRoundBtn").addEventListener("click", () => {
@@ -2414,6 +2611,7 @@
       performRoundSwap();
       currentRound += 1;
       updateRoundModeUI();
+      publishState("nextRound");
     });
 
     document.getElementById("resetRoundsBtn").addEventListener("click", () => {
@@ -2426,6 +2624,7 @@
       currentRound = 1;
       roundHistory = currentSquad.length > 0 ? [currentSquad.slice()] : [];
       updateRoundModeUI();
+      publishState("resetRounds");
     });
   }
 
@@ -2537,6 +2736,411 @@
   renderPool();
   renderBanSlots();
   updateRoundModeUI();
+
+  // ── Firebase Lobby System ────────────────────────────────────────────────
+
+  // Unique ID for this browser session (persists across page refreshes)
+  function getOrCreateUserId() {
+    let uid = localStorage.getItem("mr_uid");
+    if (!uid) {
+      const arr = new Uint8Array(12);
+      crypto.getRandomValues(arr);
+      uid = Array.from(arr, b => b.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem("mr_uid", uid);
+    }
+    return uid;
+  }
+  const MY_UID = getOrCreateUserId();
+
+  let lobbyCode = null;
+  let lobbyDb = null;
+  let lobbyRef = null;
+  let lobbyUnsubscribers = [];
+  let isApplyingRemoteState = false;
+  let myLobbyName = localStorage.getItem("mr_lobby_name") || "";
+
+  function generateLobbyCode() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const arr = new Uint8Array(6);
+    crypto.getRandomValues(arr);
+    return Array.from(arr, b => chars[b % chars.length]).join("");
+  }
+
+  function initFirebase() {
+    if (lobbyDb) return;
+    try {
+      firebase.initializeApp({
+        apiKey: "AIzaSyDN5ELX28vUzWSSUZ1lJ8RuncQ9RAa6V-E",
+        authDomain: "marvel-rivals-randomiser.firebaseapp.com",
+        databaseURL: "https://marvel-rivals-randomiser-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "marvel-rivals-randomiser",
+        storageBucket: "marvel-rivals-randomiser.firebasestorage.app",
+        messagingSenderId: "375819983094",
+        appId: "1:375819983094:web:8732f3c934f37af4b9b4d7"
+      });
+    } catch (e) { /* already initialised */ }
+    lobbyDb = firebase.database();
+  }
+
+  async function createLobby(name) {
+    initFirebase();
+    myLobbyName = name;
+    localStorage.setItem("mr_lobby_name", name);
+    const code = generateLobbyCode();
+    await doJoin(code, name);
+  }
+
+  async function joinLobby(code, name) {
+    initFirebase();
+    code = code.trim().toUpperCase();
+    myLobbyName = name;
+    localStorage.setItem("mr_lobby_name", name);
+    const snap = await lobbyDb.ref("lobbies/" + code).once("value");
+    if (!snap.exists()) throw new Error("not_found");
+    await doJoin(code, name);
+  }
+
+  async function doJoin(code, name) {
+    if (lobbyCode) leaveLobby(true); // silent leave of old lobby
+    lobbyCode = code;
+    lobbyRef = lobbyDb.ref("lobbies/" + code);
+
+    // Register presence + auto-remove on disconnect
+    const memberRef = lobbyRef.child("members/" + MY_UID);
+    await memberRef.set({ name: name || "Player", joined: Date.now() });
+    memberRef.onDisconnect().remove();
+
+    // Check if state already exists (joining) or we need to seed it (creating)
+    const snap = await lobbyRef.child("state").once("value");
+    if (!snap.exists()) {
+      // First person in — push our current local state
+      _pushStateNow("init");
+    }
+
+    pushActivity((name || "Someone") + " joined");
+    setupLobbyListeners();
+    showLobbyUI();
+  }
+
+  function leaveLobby(silent) {
+    if (!lobbyCode) return;
+    if (!silent) pushActivity((myLobbyName || "Someone") + " left");
+    if (lobbyRef) lobbyRef.child("members/" + MY_UID).remove();
+    lobbyUnsubscribers.forEach(fn => { try { fn(); } catch(e) {} });
+    lobbyUnsubscribers = [];
+    lobbyCode = null;
+    lobbyRef = null;
+    hideLobbyUI();
+  }
+
+  function setupLobbyListeners() {
+    // State changes from other members
+    const stateRef = lobbyRef.child("state");
+    const onState = stateRef.on("value", snap => {
+      if (!snap.exists()) return;
+      const st = snap.val();
+      if (!st || st._from === MY_UID) return; // ignore our own writes
+      applyRemoteState(st);
+    });
+    lobbyUnsubscribers.push(() => stateRef.off("value", onState));
+
+    // Members list
+    const membersRef = lobbyRef.child("members");
+    const onMembers = membersRef.on("value", snap => {
+      renderLobbyMembers(snap.val() || {});
+    });
+    lobbyUnsubscribers.push(() => membersRef.off("value", onMembers));
+
+    // Activity feed (last 30 entries)
+    const feedRef = lobbyRef.child("activity").limitToLast(30);
+    const onFeed = feedRef.on("value", snap => {
+      const items = [];
+      snap.forEach(child => items.push(child.val()));
+      renderActivityFeed(items);
+    });
+    lobbyUnsubscribers.push(() => feedRef.off("value", onFeed));
+  }
+
+  // Low-level state push (skips the isApplyingRemoteState guard intentionally — called locally)
+  function _pushStateNow(action) {
+    if (!lobbyRef) return;
+    const state = {
+      _from: MY_UID,
+      _action: action || "update",
+      _t: Date.now(),
+      playerCount,
+      csMode,
+      gamemode,
+      swapModeReroll,
+      currentRound,
+      squad: currentSquad.map(c => c ? c.name : null),
+      bans: currentBans.map(c => c ? c.name : null),
+      enabled: ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name),
+      playerFilters: playerFilters || {},
+      playerNames: playerNames || {},
+    };
+    lobbyRef.child("state").set(state).catch(err => console.warn("[Lobby] publish err:", err));
+  }
+
+  function publishState(action) {
+    if (!lobbyRef || !lobbyCode) return;
+    if (isApplyingRemoteState) return;
+    _pushStateNow(action);
+    // Push a human-readable activity message for meaningful actions
+    const name = myLobbyName || "Someone";
+    const msgs = {
+      roll:        name + " rolled the squad",
+      rollOne:     name + " re-rolled a player",
+      rollBans:    name + " rolled bans",
+      rollOneBan:  name + " re-rolled a ban",
+      playerCount: name + " changed to " + playerCount + " players",
+      gamemode:    name + " switched to " + gamemode + " mode",
+      nextRound:   name + " started round " + currentRound,
+      resetRounds: name + " reset the rounds",
+      csMode:      name + (csMode ? " enabled" : " disabled") + " CS mode",
+    };
+    if (msgs[action]) pushActivity(msgs[action]);
+  }
+
+  function pushActivity(msg) {
+    if (!lobbyRef) return;
+    lobbyRef.child("activity").push({ msg, t: Date.now() });
+  }
+
+  function applyRemoteState(st) {
+    isApplyingRemoteState = true;
+    try {
+      // Player count
+      if (typeof st.playerCount === "number" && st.playerCount !== playerCount) {
+        playerCount = st.playerCount;
+        document.querySelectorAll("#pcButtons .pc-btn").forEach(b => {
+          b.classList.toggle("active", parseInt(b.dataset.count) === playerCount);
+        });
+        renderSlots();
+        currentSquad = [];
+        currentRound = 1;
+        roundHistory = [];
+      }
+      // CS mode
+      if (typeof st.csMode === "boolean" && st.csMode !== csMode) {
+        csMode = st.csMode;
+        document.getElementById("csModeCheck").checked = csMode;
+      }
+      // Gamemode
+      if (st.gamemode && st.gamemode !== gamemode) {
+        gamemode = st.gamemode;
+        document.querySelectorAll("#gmButtons .gm-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.gm === gamemode);
+        });
+      }
+      // Swap mode
+      if (typeof st.swapModeReroll === "boolean" && st.swapModeReroll !== swapModeReroll) {
+        swapModeReroll = st.swapModeReroll;
+        const sc = document.getElementById("swapModeCheck");
+        if (sc) sc.checked = swapModeReroll;
+      }
+      // Current round
+      if (typeof st.currentRound === "number") currentRound = st.currentRound;
+      // Squad
+      if (Array.isArray(st.squad)) {
+        const newSquad = st.squad.map(n => n ? ROSTER.find(c => c.name === n) || null : null);
+        currentSquad = newSquad.filter(Boolean);
+        // Ensure slots are rendered for current player count first
+        if (currentSquad.length > 0) {
+          currentSquad.forEach((c, i) => { if (c) setSlot(i + 1, c, true); });
+        }
+      }
+      // Bans
+      if (Array.isArray(st.bans)) {
+        currentBans = st.bans.map(n => n ? BAN_ROSTER.find(c => c.name === n) || null : null).filter(Boolean);
+        currentBans.forEach((c, i) => { if (c) setBanSlot(i + 1, c, true); });
+      }
+      // Enabled pool
+      if (Array.isArray(st.enabled)) {
+        ROSTER.forEach(c => enabled.add(c.name));
+        st.enabled.forEach(n => enabled.delete(n));
+        renderPool();
+        updateCount();
+      }
+      // Player filters
+      if (st.playerFilters) {
+        playerFilters = st.playerFilters;
+        for (let i = 1; i <= playerCount; i++) {
+          const fb = document.getElementById("filterBtn" + i);
+          if (fb) {
+            const hasCustom = hasCustomFilter(i);
+            fb.className = "filter-btn" + (hasCustom ? " has-custom" : "");
+            fb.querySelector("span").textContent = hasCustom ? "Custom filter" : "Filter";
+          }
+        }
+      }
+      // Player names
+      if (st.playerNames) {
+        playerNames = st.playerNames;
+        for (let i = 1; i <= playerCount; i++) {
+          const inp = document.querySelector("#slot" + i + " input[type=text]");
+          if (inp) inp.value = getPlayerName(i);
+        }
+      }
+      if (typeof updateRoundModeUI === "function") updateRoundModeUI();
+      savePrefs();
+    } finally {
+      isApplyingRemoteState = false;
+    }
+  }
+
+  function renderLobbyMembers(members) {
+    const list = document.getElementById("lobbyMembersList");
+    if (list) {
+      list.innerHTML = "";
+      Object.entries(members).forEach(([uid, m]) => {
+        const row = document.createElement("div");
+        row.className = "lobby-member-row";
+        const dot = document.createElement("span");
+        dot.className = "lobby-member-dot";
+        const nameEl = document.createElement("span");
+        nameEl.className = "lobby-member-name";
+        nameEl.textContent = m.name || "Player";
+        row.appendChild(dot);
+        row.appendChild(nameEl);
+        if (uid === MY_UID) {
+          const you = document.createElement("span");
+          you.className = "lobby-member-you";
+          you.textContent = "you";
+          row.appendChild(you);
+        }
+        list.appendChild(row);
+      });
+    }
+    const count = Object.keys(members).length;
+    const compactEl = document.getElementById("lobbyCompactMembers");
+    if (compactEl) compactEl.textContent = count + " member" + (count !== 1 ? "s" : "") + " online";
+  }
+
+  function renderActivityFeed(items) {
+    const feed = document.getElementById("lobbyFeed");
+    if (!feed) return;
+    feed.innerHTML = "";
+    items.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "lobby-feed-item";
+      el.textContent = item.msg;
+      feed.appendChild(el);
+    });
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function showLobbyUI() {
+    document.getElementById("lobbyCompactBar").classList.add("visible");
+    document.getElementById("lobbySidebarLeft").classList.add("visible");
+    document.getElementById("lobbySidebarRight").classList.add("visible");
+    document.getElementById("lobbyCompactCode").textContent = lobbyCode;
+    document.getElementById("lobbySidebarCode").textContent = lobbyCode;
+    const btn = document.getElementById("lobbyBtn");
+    btn.classList.add("in-lobby");
+    btn.textContent = lobbyCode;
+  }
+
+  function hideLobbyUI() {
+    document.getElementById("lobbyCompactBar").classList.remove("visible");
+    document.getElementById("lobbySidebarLeft").classList.remove("visible");
+    document.getElementById("lobbySidebarRight").classList.remove("visible");
+    const btn = document.getElementById("lobbyBtn");
+    btn.classList.remove("in-lobby");
+    btn.textContent = "🔗 Lobby";
+    document.getElementById("lobbyMembersList").innerHTML = "";
+    document.getElementById("lobbyFeed").innerHTML = "";
+  }
+
+  function setupLobbyUI() {
+    const modal   = document.getElementById("lobbyModal");
+    const closeBtn = document.getElementById("lobbyModalClose");
+    const createBtn = document.getElementById("lobbyModalCreate");
+    const joinBtn  = document.getElementById("lobbyModalJoin");
+    const nameInput = document.getElementById("lobbyNameInput");
+    const codeInput = document.getElementById("lobbyCodeInput");
+    const errEl    = document.getElementById("lobbyModalErr");
+    const lobbyBtn = document.getElementById("lobbyBtn");
+    const compactLeave = document.getElementById("lobbyCompactLeave");
+    const sideLeave    = document.getElementById("lobbySidebarLeave");
+    const sideCode     = document.getElementById("lobbySidebarCode");
+    const compactCode  = document.getElementById("lobbyCompactCode");
+
+    // Pre-fill name
+    if (myLobbyName) nameInput.value = myLobbyName;
+
+    // Open modal
+    lobbyBtn.addEventListener("click", () => modal.classList.add("open"));
+    closeBtn.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", e => { if (e.target === modal) modal.classList.remove("open"); });
+
+    // Force uppercase on code input
+    codeInput.addEventListener("input", () => {
+      const pos = codeInput.selectionStart;
+      codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      codeInput.setSelectionRange(pos, pos);
+    });
+
+    async function handleAction(isCreate) {
+      errEl.classList.remove("visible");
+      const name = (nameInput.value || "").trim() || "Player";
+      const code = (codeInput.value || "").trim().toUpperCase();
+      if (isCreate) {
+        createBtn.disabled = true;
+        createBtn.textContent = "Creating…";
+        try {
+          await createLobby(name);
+          modal.classList.remove("open");
+        } catch (e) {
+          errEl.textContent = "Couldn't create lobby. Check your connection.";
+          errEl.classList.add("visible");
+        }
+        createBtn.disabled = false;
+        createBtn.textContent = "✨ Create lobby";
+      } else {
+        if (!code) {
+          errEl.textContent = "Enter a lobby code to join.";
+          errEl.classList.add("visible");
+          return;
+        }
+        joinBtn.disabled = true;
+        joinBtn.textContent = "Joining…";
+        try {
+          await joinLobby(code, name);
+          modal.classList.remove("open");
+        } catch (e) {
+          errEl.textContent = e.message === "not_found"
+            ? "Lobby not found. Check the code and try again."
+            : "Couldn't connect. Check your internet.";
+          errEl.classList.add("visible");
+        }
+        joinBtn.disabled = false;
+        joinBtn.textContent = "Join lobby";
+      }
+    }
+
+    createBtn.addEventListener("click", () => handleAction(true));
+    joinBtn.addEventListener("click",   () => handleAction(false));
+
+    // Leave buttons
+    if (compactLeave) compactLeave.addEventListener("click", () => leaveLobby(false));
+    if (sideLeave)    sideLeave.addEventListener("click",    () => leaveLobby(false));
+
+    // Copy code on click
+    function copyCode() {
+      if (!lobbyCode) return;
+      navigator.clipboard.writeText(lobbyCode).catch(() => {});
+    }
+    if (sideCode)    sideCode.addEventListener("click", copyCode);
+    if (compactCode) compactCode.addEventListener("click", copyCode);
+
+    // Close modal on Escape
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && modal.classList.contains("open")) modal.classList.remove("open");
+    });
+  }
+
+  setupLobbyUI();
 </script>
 </body>
 </html>
