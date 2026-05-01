@@ -1,66 +1,347 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="blue">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marvel Rivals Squad Randomizer</title>
 <style>
+  /* ── Theme variables ───────────────────────────────────────────────── */
+  :root {
+    --accent-1: #f4c430;
+    --accent-2: #e23636;
+    --accent-glow: rgba(244,196,48,0.55);
+    --accent-soft: rgba(244,196,48,0.08);
+    --accent-strong: #f4c430;
+  }
+  html[data-theme="blue"] {
+    --accent-1: #4f8cff;
+    --accent-2: #8a5cff;
+    --accent-glow: rgba(138,92,255,0.55);
+    --accent-soft: rgba(138,92,255,0.08);
+    --accent-strong: #8a5cff;
+  }
+  html[data-theme="emerald"] {
+    --accent-1: #34d399;
+    --accent-2: #14b8a6;
+    --accent-glow: rgba(52,211,153,0.55);
+    --accent-soft: rgba(52,211,153,0.08);
+    --accent-strong: #34d399;
+  }
+  html[data-theme="rose"] {
+    --accent-1: #fb7185;
+    --accent-2: #ec4899;
+    --accent-glow: rgba(251,113,133,0.55);
+    --accent-soft: rgba(251,113,133,0.08);
+    --accent-strong: #fb7185;
+  }
+  html[data-theme="classic"] {
+    --accent-1: #f4c430;
+    --accent-2: #e23636;
+    --accent-glow: rgba(244,196,48,0.55);
+    --accent-soft: rgba(244,196,48,0.08);
+    --accent-strong: #f4c430;
+  }
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #0f1115;
+    background: #0b0d11;
     color: #e8e6e1;
     margin: 0;
-    padding: 2rem 1rem;
+    padding: 1.25rem 0.875rem 3rem;
     min-height: 100vh;
   }
-  .container { max-width: 760px; margin: 0 auto; }
+  .container { max-width: 720px; margin: 0 auto; }
   h1 {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 600;
-    margin: 0 0 0.25rem;
-    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    margin: 0 0 0.15rem;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .subtitle { color: #888780; font-size: 14px; margin: 0 0 1.5rem; }
+  .subtitle { color: #6b6a64; font-size: 12px; margin: 0 0 1rem; }
+
+  /* ── Header (title + settings cog) ───────────────────────────────────── */
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .settings-cog {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #14161b;
+    border: 1px solid #20232a;
+    color: #9aa0ac;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.25s ease, color 0.18s, border-color 0.18s;
+  }
+  .settings-cog:hover { color: var(--accent-strong); border-color: var(--accent-glow); }
+  .settings-cog.open { transform: rotate(60deg); color: var(--accent-strong); border-color: var(--accent-glow); }
+  .settings-cog svg { width: 16px; height: 16px; }
+
+  /* Settings panel (slides under the header when open) */
+  .settings-panel {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, margin 0.3s ease;
+    margin: 0 0 0;
+  }
+  .settings-panel.open { max-height: 360px; margin: 0 0 14px; }
+  .settings-card {
+    background: #11141a;
+    border: 1px solid #1a1d24;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .settings-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b6a64;
+    margin: 0 0 8px;
+  }
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .theme-swatch {
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 8px;
+    padding: 8px 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .theme-swatch:hover { border-color: #2c2f38; }
+  .theme-swatch.active { border-color: var(--accent-strong); background: var(--accent-soft); }
+  .theme-swatch-chip {
+    width: 100%;
+    height: 22px;
+    border-radius: 5px;
+  }
+  .theme-swatch-name {
+    font-size: 10px;
+    color: #c8c5be;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .theme-swatch.active .theme-swatch-name { color: #ffffff; }
+
+  /* ── Round mode (gamemode + round swapping) ──────────────────────────── */
+  .round-mode-card {
+    background: #11141a;
+    border: 1px solid #1a1d24;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 12px 0 14px;
+  }
+  .round-mode-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .round-mode-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #c8c5be;
+    margin: 0;
+    letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .round-counter {
+    font-size: 10px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-glow);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .gamemode-buttons {
+    display: flex;
+    gap: 4px;
+    background: #0b0d11;
+    border: 1px solid #1a1d24;
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .gm-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #6b6a64;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .gm-btn:hover { color: #e8e6e1; }
+  .gm-btn.active {
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+    color: #ffffff;
+  }
+  .gm-btn .gm-rounds { opacity: 0.7; font-weight: 500; margin-left: 2px; }
+  .swap-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #1a1d24;
+  }
+  .swap-toggle-label {
+    font-size: 11px;
+    color: #c8c5be;
+    flex: 1;
+    line-height: 1.35;
+  }
+  .swap-toggle-label small {
+    display: block;
+    font-size: 10px;
+    color: #6b6a64;
+    margin-top: 2px;
+  }
+  .next-round-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .next-round-btn {
+    flex: 1;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: transparent;
+    color: var(--accent-strong);
+    border: 1px solid var(--accent-glow);
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .next-round-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+    color: #ffffff;
+    border-color: transparent;
+  }
+  .next-round-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .reset-rounds-btn {
+    background: transparent;
+    border: 1px solid #20232a;
+    color: #6b6a64;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .reset-rounds-btn:hover { color: #c8c5be; border-color: #2c2f38; }
+
+  /* Reuse mode-toggle styling for swap-mode toggle */
+  .swap-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .swap-mode-toggle input { display: none; }
+  .swap-mode-toggle .toggle-track {
+    width: 30px;
+    height: 16px;
+    background: #1a1d24;
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .swap-mode-toggle .toggle-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #6b6a64;
+    transition: transform 0.18s, background 0.18s;
+  }
+  .swap-mode-toggle input:checked + .toggle-track {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  }
+  .swap-mode-toggle input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(14px);
+    background: #fff;
+  }
+
+  /* Reroll flash highlight on slots after round-swap */
+  .portrait.swap-flash {
+    animation: swapFlash 0.9s ease-out;
+  }
+  @keyframes swapFlash {
+    0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
+    40%  { box-shadow: 0 0 0 4px var(--accent-glow); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
 
   .player-count-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 1rem;
+    gap: 8px;
+    margin-bottom: 0.625rem;
     flex-wrap: wrap;
   }
   .player-count-label {
-    font-size: 13px;
-    color: #888780;
+    font-size: 11px;
+    color: #6b6a64;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
   .player-count-buttons {
     display: flex;
-    gap: 4px;
-    background: #1a1d24;
-    border: 1px solid #2a2e38;
-    border-radius: 8px;
-    padding: 3px;
+    gap: 2px;
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 6px;
+    padding: 2px;
   }
   .pc-btn {
-    width: 34px;
-    height: 30px;
+    width: 28px;
+    height: 26px;
     background: transparent;
     border: none;
-    color: #888780;
-    font-size: 14px;
+    color: #6b6a64;
+    font-size: 12px;
     font-weight: 500;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.12s;
   }
   .pc-btn:hover { color: #e8e6e1; }
   .pc-btn.active {
-    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
   }
 
@@ -74,12 +355,12 @@
   .slots.cols-3 { grid-template-columns: repeat(3, 1fr); }
 
   .slot {
-    background: #1a1d24;
-    border: 1px solid #2a2e38;
-    border-radius: 12px;
-    padding: 1rem 0.75rem;
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 10px;
+    padding: 0.75rem 0.5rem;
     text-align: center;
-    min-height: 200px;
+    min-height: 168px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -88,32 +369,32 @@
   .slot.spinning .name, .slot.spinning .portrait { opacity: 0.55; }
   .player {
     font-size: 11px;
-    color: #888780;
-    margin: 0 0 10px;
+    color: #6b6a64;
+    margin: 0 0 8px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
   .portrait {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    background: #2a2e38;
-    margin-bottom: 10px;
+    background: #20232a;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: #ffffff;
     overflow: hidden;
     transition: opacity 0.1s, transform 0.15s, box-shadow 0.15s;
-    border: 2px solid #2a2e38;
+    border: 2px solid #20232a;
     flex-shrink: 0;
     position: relative;
   }
   .portrait img { width: 100%; height: 100%; object-fit: cover; }
   .portrait.rerollable { cursor: pointer; }
-  .portrait.rerollable:hover { transform: scale(1.08); box-shadow: 0 0 0 3px rgba(244,196,48,0.55); }
+  .portrait.rerollable:hover { transform: scale(1.08); box-shadow: 0 0 0 3px var(--accent-glow); }
   .portrait.rerollable::after {
     content: "🎲";
     position: absolute;
@@ -121,7 +402,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 18px;
     background: rgba(15,17,21,0.72);
     border-radius: 50%;
     opacity: 0;
@@ -132,9 +413,9 @@
   .portrait.role-duelist { border-color: #E24B4A; }
   .portrait.role-strategist { border-color: #97C459; }
   .name {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
-    margin: 0 0 8px;
+    margin: 0 0 6px;
     color: #ffffff;
     transition: opacity 0.1s;
     line-height: 1.2;
@@ -142,26 +423,28 @@
   }
   .role {
     display: inline-block;
-    font-size: 11px;
-    padding: 3px 10px;
+    font-size: 10px;
+    padding: 2px 8px;
     border-radius: 999px;
     font-weight: 500;
+    letter-spacing: 0.04em;
   }
   .role-vanguard { background: #0C447C; color: #B5D4F4; }
   .role-duelist { background: #791F1F; color: #F7C1C1; }
   .role-strategist { background: #27500A; color: #C0DD97; }
-  .controls { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+  .controls { display: flex; gap: 6px; margin-bottom: 1rem; }
   .btn-primary {
     flex: 1;
-    padding: 12px 16px;
-    font-size: 15px;
+    padding: 10px 14px;
+    font-size: 13px;
     font-weight: 500;
-    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
     border: none;
-    border-radius: 8px;
+    border-radius: 7px;
     cursor: pointer;
     transition: transform 0.1s;
+    letter-spacing: 0.02em;
   }
   .btn-primary:hover { opacity: 0.92; }
   .btn-primary:active { transform: scale(0.98); }
@@ -169,66 +452,393 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 0 12px;
+    margin: 0 0 8px;
   }
-  .section-title { font-size: 14px; font-weight: 500; margin: 0; color: #ffffff; }
-  .section-meta { font-size: 12px; color: #888780; }
-  .mini-controls { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .section-title { font-size: 12px; font-weight: 600; margin: 0; color: #e8e6e1; text-transform: uppercase; letter-spacing: 0.06em; }
+  .section-meta { font-size: 11px; color: #6b6a64; }
+  .mini-controls { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
   .mini-controls button {
-    font-size: 12px;
-    padding: 6px 12px;
-    background: #1a1d24;
-    color: #e8e6e1;
-    border: 1px solid #2a2e38;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .mini-controls button:hover { border-color: #444441; background: #21252e; }
-  .role-group { margin-bottom: 1.25rem; }
-  .role-label {
     font-size: 11px;
+    padding: 5px 10px;
+    background: #14161b;
+    color: #c8c6c1;
+    border: 1px solid #20232a;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
+  }
+  .mini-controls button:hover { border-color: #3a3d46; background: #1a1d24; }
+  .role-group { margin-bottom: 1rem; }
+  .role-label {
+    font-size: 10px;
     font-weight: 500;
-    color: #888780;
+    color: #6b6a64;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  /* ── Hero-select style grid (in-game-inspired tile picker) ─────────── */
+  .role-tabs {
+    display: flex;
+    gap: 2px;
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 7px;
+    padding: 2px;
     margin: 0 0 10px;
   }
-  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
-  .chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-    padding: 5px 10px 5px 5px;
-    border-radius: 999px;
-    border: 1px solid #2a2e38;
-    background: #1a1d24;
-    color: #e8e6e1;
+  .role-tab {
+    flex: 1;
+    padding: 7px 6px;
+    background: transparent;
+    border: none;
+    color: #6b6a64;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 5px;
     cursor: pointer;
-    user-select: none;
-    transition: opacity 0.15s;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .chip-portrait {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    background: #2a2e38;
-    flex-shrink: 0;
+    transition: all 0.12s;
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .role-tab .role-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .role-tab[data-role="all"] .role-dot { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
+  .role-tab[data-role="Vanguard"]    .role-dot { background: #378ADD; }
+  .role-tab[data-role="Duelist"]     .role-dot { background: #E24B4A; }
+  .role-tab[data-role="Strategist"]  .role-dot { background: #97C459; }
+  .role-tab:hover { color: #e8e6e1; }
+  .role-tab.active {
+    background: #20232a;
+    color: #ffffff;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 6px;
+  }
+  .hero-tile {
+    position: relative;
+    aspect-ratio: 1 / 1.18;
+    background: #1a1d24;
+    border: 1px solid #2a2e38;
+    border-radius: 5px;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-tile:hover { transform: translateY(-2px); border-color: #5d6068; box-shadow: 0 4px 14px rgba(0,0,0,0.4); }
+  .hero-tile-img {
+    flex: 1;
+    width: 100%;
+    background: #2a2e38;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    position: relative;
+  }
+  .hero-tile-img > div {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-tile-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center 18%;
+  }
+  .hero-tile-name {
+    font-size: 9px;
+    font-weight: 500;
+    padding: 3px 3px;
+    color: #d8d6d1;
+    text-align: center;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-top: 1px solid #20232a;
+    background: #14161b;
+  }
+  .hero-tile.role-Vanguard    .hero-tile-img { box-shadow: inset 0 -2px 0 #378ADD; }
+  .hero-tile.role-Duelist     .hero-tile-img { box-shadow: inset 0 -2px 0 #E24B4A; }
+  .hero-tile.role-Strategist  .hero-tile-img { box-shadow: inset 0 -2px 0 #97C459; }
+  .hero-tile.off { opacity: 0.32; }
+  .hero-tile.off .hero-tile-img::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, transparent 47%, rgba(0,0,0,0.85) 48%, rgba(0,0,0,0.85) 52%, transparent 53%),
+      rgba(10,12,16,0.55);
+  }
+  .hero-tile.off .hero-tile-name { color: #6a6862; }
+  .hero-tile.banned-marker .hero-tile-img::before {
+    content: "BANNED";
+    position: absolute;
+    top: 4px; left: 4px;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 5px;
+    background: #c0524f;
+    color: #fff;
+    border-radius: 3px;
+    z-index: 2;
+  }
+  .hero-tile.disabled-marker { cursor: default; }
+
+  .grid-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px;
+    flex-wrap: wrap;
+  }
+  .grid-meta-row .section-meta { white-space: nowrap; }
+
+  /* ── Editable player name ───────────────────────────────────────────── */
+  .player-name-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin: 0 0 8px;
+    cursor: text;
+    color: #6b6a64;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    max-width: 100%;
+  }
+  .player-name-edit:hover { border-color: #20232a; color: #c8c6c1; }
+  .player-name-edit input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: center;
+    width: 100%;
+    min-width: 50px;
+    max-width: 130px;
+  }
+  .pencil-icon {
+    width: 9px; height: 9px;
+    opacity: 0.45;
+    flex-shrink: 0;
+  }
+  .player-name-edit:hover .pencil-icon { opacity: 0.85; }
+
+  /* ── Per-player filter button ───────────────────────────────────────── */
+  .filter-btn {
+    margin-top: 8px;
+    background: transparent;
+    border: 1px solid #20232a;
+    border-radius: 5px;
+    color: #6b6a64;
+    font-size: 10px;
+    padding: 4px 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.12s, border-color 0.12s;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .filter-btn:hover { color: #e8e6e1; border-color: #3a3d46; }
+  .filter-btn.has-custom {
+    color: var(--accent-strong);
+    border-color: var(--accent-glow);
+    background: var(--accent-soft);
+  }
+  .filter-btn.has-custom:hover { border-color: var(--accent-strong); }
+
+  /* ── Modal (per-player filter) ──────────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(6,8,11,0.88);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    transition: opacity 0.18s;
+    pointer-events: none;
+  }
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .modal {
+    background: #0f1115;
+    border: 1px solid #20232a;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 680px;
+    max-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(8px);
+    transition: transform 0.18s;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-backdrop.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #20232a;
+    flex-shrink: 0;
+  }
+  .modal-title { font-size: 13px; font-weight: 600; color: #ffffff; margin: 0; letter-spacing: 0.02em; }
+  .modal-subtitle { font-size: 11px; color: #6b6a64; margin: 2px 0 0; }
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: #6b6a64;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 2px 8px;
+    line-height: 1;
+    border-radius: 4px;
+  }
+  .modal-close:hover { color: #ffffff; background: #14161b; }
+  .modal-body {
+    padding: 12px 14px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-footer {
+    padding: 10px 14px;
+    border-top: 1px solid #20232a;
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .modal-footer .left-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .modal-footer button {
+    font-size: 12px;
+    padding: 6px 12px;
+    background: #14161b;
+    color: #e8e6e1;
+    border: 1px solid #20232a;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .modal-footer button:hover { border-color: #444441; }
+  .modal-footer .btn-reset { color: #c0524f; border-color: #3d1515; background: #170e0e; }
+  .modal-footer .btn-reset:hover { border-color: #c0524f; }
+  .modal-footer .btn-done {
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+    color: #ffffff;
+    border-color: transparent;
+    font-weight: 500;
+  }
+
+  .filter-summary {
+    font-size: 11px;
+    color: #6b6a64;
+    margin: 8px 0 12px;
+    padding: 7px 9px;
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 5px;
+    line-height: 1.5;
+  }
+  .filter-summary strong { color: #e8e6e1; font-weight: 500; }
+
+  /* hero grid is denser inside the modal on tight viewports */
+  .modal .hero-grid { gap: 5px; }
+
+  @media (max-width: 600px) {
+    .hero-grid { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 5px; }
+    .hero-tile-name { font-size: 8px; padding: 2px 2px; }
+    .role-tab { font-size: 10px; padding: 7px 4px; letter-spacing: 0.02em; }
+  }
+
+  /* ── Role section headers (when viewing All) — collapsible ────────── */
+  .grid-section { margin-top: 14px; }
+  .grid-section:first-child { margin-top: 0; }
+  .grid-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s, border-color 0.12s;
+    width: 100%;
+    text-align: left;
+  }
+  .grid-section-head:hover { background: #14161b; border-color: #20232a; }
+  .grid-section-caret {
+    width: 10px; height: 10px;
+    flex-shrink: 0;
+    color: #6b6a64;
+    transition: transform 0.18s;
+  }
+  .grid-section.collapsed .grid-section-caret { transform: rotate(-90deg); }
+  .grid-section.collapsed .hero-grid { display: none; }
+  .grid-section-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .grid-section-dot.Vanguard   { background: #378ADD; box-shadow: 0 0 6px rgba(55,138,221,0.5); }
+  .grid-section-dot.Duelist    { background: #E24B4A; box-shadow: 0 0 6px rgba(226,75,74,0.5); }
+  .grid-section-dot.Strategist { background: #97C459; box-shadow: 0 0 6px rgba(151,196,89,0.5); }
+  .grid-section-title {
     font-size: 10px;
     font-weight: 600;
-    color: #ffffff;
-    overflow: hidden;
+    color: #e8e6e1;
+    margin: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
-  .chip-portrait img { width: 100%; height: 100%; object-fit: cover; }
-  .chip-name { overflow: hidden; text-overflow: ellipsis; }
-  .chip.off { opacity: 0.35; text-decoration: line-through; background: #14161b; }
-  .chip:hover { border-color: #444441; }
+  .grid-section-count {
+    font-size: 10px;
+    color: #6b6a64;
+    font-weight: 500;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+  }
+  .grid-section-count .on { color: #e8e6e1; }
   @media (max-width: 600px) {
     .slots.cols-2, .slots.cols-3 { grid-template-columns: 1fr 1fr; }
   }
@@ -237,39 +847,41 @@
   }
   .tabs {
     display: flex;
-    gap: 4px;
-    background: #1a1d24;
-    border: 1px solid #2a2e38;
-    border-radius: 8px;
-    padding: 3px;
-    margin-bottom: 1.5rem;
+    gap: 2px;
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 7px;
+    padding: 2px;
+    margin-bottom: 1rem;
   }
   .tab-btn {
     flex: 1;
-    padding: 9px 16px;
+    padding: 7px 14px;
     background: transparent;
     border: none;
-    color: #888780;
-    font-size: 14px;
-    font-weight: 500;
+    color: #6b6a64;
+    font-size: 12px;
+    font-weight: 600;
     border-radius: 5px;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.12s;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
   .tab-btn:hover { color: #e8e6e1; }
   .tab-btn.active {
-    background: linear-gradient(135deg, #f4c430 0%, #e23636 100%);
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
   }
   .panel { display: none; }
   .panel.active { display: block; }
   .ban-slot {
-    background: #170e0e;
-    border: 1px solid #3d1515;
-    border-radius: 12px;
-    padding: 1rem 0.75rem;
+    background: #14100f;
+    border: 1px solid #2a1414;
+    border-radius: 10px;
+    padding: 0.75rem 0.5rem;
     text-align: center;
-    min-height: 200px;
+    min-height: 168px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -278,15 +890,57 @@
   .ban-slot.spinning .name,
   .ban-slot.spinning .portrait { opacity: 0.55; }
   .ban-label {
-    font-size: 11px;
+    font-size: 10px;
     color: #c0524f;
-    margin: 0 0 10px;
+    margin: 0 0 8px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     font-weight: 500;
   }
   .portrait.role-banned { border-color: #c0524f; }
   .portrait.rerollable.role-banned:hover { box-shadow: 0 0 0 3px rgba(192,82,79,0.6); }
+
+  /* CS mode toggle — sleeker */
+  .mode-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.875rem;
+  }
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #6b6a64;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.12s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  .mode-toggle:hover { color: #c8c6c1; }
+  .mode-toggle input[type=checkbox] { display: none; }
+  .toggle-track {
+    width: 32px;
+    height: 18px;
+    background: #20232a;
+    border-radius: 9px;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.18s;
+  }
+  .toggle-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #555;
+    transition: transform 0.18s, background 0.18s;
+  }
+  .mode-toggle input:checked + .toggle-track { background: linear-gradient(135deg, var(--accent-1), var(--accent-2)); }
+  .mode-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(14px); background: #fff; }
+  .mode-toggle input:checked ~ .toggle-label { color: #e8e6e1; }
 
   /* ── Case-opening reel overlay ─────────────────────────────────────── */
   .reel-overlay {
@@ -345,15 +999,15 @@
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
   }
-  .reel-viewport::before { top: 0;    border-top:    10px solid #f4c430; }
-  .reel-viewport::after  { bottom: 0; border-bottom: 10px solid #f4c430; }
+  .reel-viewport::before { top: 0;    border-top:    10px solid var(--accent-strong); }
+  .reel-viewport::after  { bottom: 0; border-bottom: 10px solid var(--accent-strong); }
   .reel-center-line {
     position: absolute;
     top: 0; bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: 2px;
-    background: rgba(244,196,48,0.12);
+    background: var(--accent-soft);
     z-index: 3;
     pointer-events: none;
   }
@@ -417,12 +1071,12 @@
     padding: 0 4px;
   }
   .reel-item-highlighted {
-    background: rgba(244,196,48,0.1);
+    background: var(--accent-soft);
   }
   .reel-item-highlighted .reel-item-portrait {
-    box-shadow: 0 0 0 2px #f4c430, 0 0 22px rgba(244,196,48,0.45);
+    box-shadow: 0 0 0 2px var(--accent-strong), 0 0 22px var(--accent-glow);
   }
-  .reel-item-highlighted .reel-item-name { color: #f4c430; }
+  .reel-item-highlighted .reel-item-name { color: var(--accent-strong); }
   .reel-item-ban-highlighted {
     background: rgba(192,82,79,0.1);
   }
@@ -431,50 +1085,49 @@
   }
   .reel-item-ban-highlighted .reel-item-name { color: #e07070; }
 
-  /* CS mode toggle */
-  .mode-row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1.25rem;
-  }
-  .mode-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    color: #888780;
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.15s;
-  }
-  .mode-toggle:hover { color: #c8c6c1; }
-  .mode-toggle input[type=checkbox] { display: none; }
-  .toggle-track {
-    width: 38px;
-    height: 22px;
-    background: #2a2e38;
-    border-radius: 11px;
-    position: relative;
-    flex-shrink: 0;
-    transition: background 0.2s;
-  }
-  .toggle-thumb {
-    position: absolute;
-    top: 3px; left: 3px;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: #555;
-    transition: transform 0.2s, background 0.2s;
-  }
-  .mode-toggle input:checked + .toggle-track { background: linear-gradient(135deg, #f4c430, #e23636); }
-  .mode-toggle input:checked + .toggle-track .toggle-thumb { transform: translateX(16px); background: #fff; }
-  .mode-toggle input:checked ~ .toggle-label { color: #e8e6e1; }
+  /* CS mode toggle (legacy block kept for safety) */
+  .legacy-cs-removed { display: none; }
+  /* removed duplicate mode-toggle block — see top of stylesheet */
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Marvel Rivals Squad Randomizer</h1>
-  <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
+  <div class="header-row">
+    <div>
+      <h1>Marvel Rivals Squad Randomizer</h1>
+      <p class="subtitle">Roll random heroes for solo, duo, trio, all the way to a full 6-stack</p>
+    </div>
+    <button class="settings-cog" id="settingsCog" aria-label="Settings" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel" aria-hidden="true">
+    <div class="settings-card">
+      <p class="settings-section-title">Color theme</p>
+      <div class="theme-grid" id="themeGrid">
+        <button class="theme-swatch" data-theme="blue">
+          <span class="theme-swatch-chip" style="background:linear-gradient(135deg,#4f8cff 0%,#8a5cff 100%)"></span>
+          <span class="theme-swatch-name">Nebula</span>
+        </button>
+        <button class="theme-swatch" data-theme="emerald">
+          <span class="theme-swatch-chip" style="background:linear-gradient(135deg,#34d399 0%,#14b8a6 100%)"></span>
+          <span class="theme-swatch-name">Emerald</span>
+        </button>
+        <button class="theme-swatch" data-theme="rose">
+          <span class="theme-swatch-chip" style="background:linear-gradient(135deg,#fb7185 0%,#ec4899 100%)"></span>
+          <span class="theme-swatch-name">Rose</span>
+        </button>
+        <button class="theme-swatch" data-theme="classic">
+          <span class="theme-swatch-chip" style="background:linear-gradient(135deg,#f4c430 0%,#e23636 100%)"></span>
+          <span class="theme-swatch-name">Classic</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="squad">🎲 Squad</button>
@@ -508,20 +1161,53 @@
     <button class="btn-primary" id="rollBtn">🎲 Randomize squad &nbsp;<span style="opacity:0.7;font-size:12px;">(or press space)</span></button>
   </div>
 
+  <!-- Round / gamemode mechanic -->
+  <div class="round-mode-card" id="roundModeCard">
+    <div class="round-mode-head">
+      <p class="round-mode-title">Gamemode <span class="round-counter" id="roundCounter" style="display:none;">Round 1</span></p>
+    </div>
+    <div class="gamemode-buttons" id="gmButtons">
+      <button class="gm-btn active" data-gm="standard">Standard <span class="gm-rounds">— no swaps</span></button>
+      <button class="gm-btn" data-gm="payload">Payload <span class="gm-rounds">— 2 rounds</span></button>
+      <button class="gm-btn" data-gm="domination">Domination <span class="gm-rounds">— bo3</span></button>
+    </div>
+    <div class="swap-toggle-row" id="swapToggleRow" style="display:none;">
+      <div class="swap-toggle-label">
+        <span id="swapModeText">Swap with teammate</span>
+        <small id="swapModeHint">After each round, players rotate characters between each other.</small>
+      </div>
+      <label class="swap-mode-toggle" title="Toggle reroll mode">
+        <input type="checkbox" id="swapModeCheck">
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </div>
+    <div class="next-round-row" id="nextRoundRow" style="display:none;">
+      <button class="next-round-btn" id="nextRoundBtn" disabled>↻ Next round</button>
+      <button class="reset-rounds-btn" id="resetRoundsBtn">Reset</button>
+    </div>
+  </div>
+
   <div class="section-head">
-    <p class="section-title">Character pool</p>
+    <p class="section-title">Shared character pool</p>
     <span class="section-meta" id="poolCount">— enabled</span>
+  </div>
+  <p class="subtitle" style="margin:-6px 0 12px;font-size:12px;">Default pool used by all players. Individual players can override this with their own filter via the <em>Filter</em> button on their slot.</p>
+
+  <div class="role-tabs" id="poolRoleTabs">
+    <button class="role-tab active" data-role="all"><span class="role-dot"></span>All</button>
+    <button class="role-tab" data-role="Vanguard"><span class="role-dot"></span>Vanguard</button>
+    <button class="role-tab" data-role="Duelist"><span class="role-dot"></span>Duelist</button>
+    <button class="role-tab" data-role="Strategist"><span class="role-dot"></span>Strategist</button>
   </div>
 
   <div class="mini-controls">
     <button id="enableAll">Enable all</button>
     <button id="disableAll">Disable all</button>
-    <button data-role="Vanguard">Only vanguards</button>
-    <button data-role="Duelist">Only duelists</button>
-    <button data-role="Strategist">Only strategists</button>
+    <button id="enableVisible">Enable visible</button>
+    <button id="disableVisible">Disable visible</button>
   </div>
 
-  <div id="poolContainer"></div>
+  <div class="hero-grid" id="poolGrid"></div>
   </div><!-- end panel-squad -->
 
   <div class="panel" id="panel-bans">
@@ -531,6 +1217,40 @@
       <button class="btn-primary" id="rollBansBtn">🚫 Randomize Bans &nbsp;<span style="opacity:0.7;font-size:12px;">(or press space)</span></button>
     </div>
   </div><!-- end panel-bans -->
+</div>
+
+<!-- Per-player filter modal -->
+<div class="modal-backdrop" id="filterModal" role="dialog" aria-modal="true" aria-labelledby="filterModalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <p class="modal-title" id="filterModalTitle">Filter for <span id="filterPlayerName">Player</span></p>
+        <p class="modal-subtitle">Pick which heroes can be rolled for this player. Leave it as-is to use the shared pool.</p>
+      </div>
+      <button class="modal-close" id="filterModalClose" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="filter-summary" id="filterSummary"></div>
+      <div class="role-tabs" id="filterRoleTabs">
+        <button class="role-tab active" data-role="all"><span class="role-dot"></span>All</button>
+        <button class="role-tab" data-role="Vanguard"><span class="role-dot"></span>Vanguard</button>
+        <button class="role-tab" data-role="Duelist"><span class="role-dot"></span>Duelist</button>
+        <button class="role-tab" data-role="Strategist"><span class="role-dot"></span>Strategist</button>
+      </div>
+      <div class="mini-controls">
+        <button id="filterEnableAll">Enable all</button>
+        <button id="filterDisableAll">Disable all</button>
+        <button id="filterCopyShared">Copy shared pool</button>
+      </div>
+      <div class="hero-grid" id="filterGrid"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="left-group">
+        <button class="btn-reset" id="filterReset">Use shared pool</button>
+      </div>
+      <button class="btn-done" id="filterDone">Done</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -616,10 +1336,33 @@
   const STORAGE_KEY = "mr_disabled_chars_v4";
   const COUNT_KEY   = "mr_player_count";
   const CS_MODE_KEY = "mr_cs_mode";
+  const NAMES_KEY   = "mr_player_names_v1";
+  const PFILTER_KEY = "mr_player_filters_v1";
+  const THEME_KEY   = "mr_theme_v1";
+  const GAMEMODE_KEY = "mr_gamemode_v1";
+  const SWAPMODE_KEY = "mr_swapmode_v1";
+
   const enabled = new Set(ROSTER.map(c => c.name));
   let playerCount = 2;
   let currentSquad = [];
   let csMode = false;
+
+  // Theme + gamemode state
+  let themeName = "blue";          // "blue" | "emerald" | "rose" | "classic"
+  let gamemode = "standard";       // "standard" | "payload" | "domination"
+  let swapModeReroll = false;      // false = swap with teammate, true = reroll from pool
+  let currentRound = 1;            // 1-indexed
+  // History of squads each round so we can reset / step back if needed.
+  // Each entry is an array of character objects (one per slot).
+  let roundHistory = [];
+
+  // Per-player display names. Keyed by 1-based slot index.
+  // Defaults to "Player N" (handled in getPlayerName).
+  let playerNames = {};
+  // Per-player character filter overrides. Keyed by 1-based slot index.
+  // If a key is missing OR null, the player uses the shared `enabled` pool.
+  // Otherwise the value is an Array of disabled character names for that player.
+  let playerFilters = {};
 
   // Load saved preferences
   try {
@@ -631,6 +1374,15 @@
     const savedCount = parseInt(localStorage.getItem(COUNT_KEY), 10);
     if (savedCount >= 1 && savedCount <= 6) playerCount = savedCount;
     csMode = localStorage.getItem(CS_MODE_KEY) === "1";
+    const savedNames = localStorage.getItem(NAMES_KEY);
+    if (savedNames) playerNames = JSON.parse(savedNames) || {};
+    const savedFilters = localStorage.getItem(PFILTER_KEY);
+    if (savedFilters) playerFilters = JSON.parse(savedFilters) || {};
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) themeName = savedTheme;
+    const savedGm = localStorage.getItem(GAMEMODE_KEY);
+    if (savedGm === "payload" || savedGm === "domination" || savedGm === "standard") gamemode = savedGm;
+    swapModeReroll = localStorage.getItem(SWAPMODE_KEY) === "1";
   } catch (e) {}
 
   function savePrefs() {
@@ -639,8 +1391,28 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(disabled));
       localStorage.setItem(COUNT_KEY, String(playerCount));
       localStorage.setItem(CS_MODE_KEY, csMode ? "1" : "0");
+      localStorage.setItem(NAMES_KEY, JSON.stringify(playerNames));
+      localStorage.setItem(PFILTER_KEY, JSON.stringify(playerFilters));
+      localStorage.setItem(THEME_KEY, themeName);
+      localStorage.setItem(GAMEMODE_KEY, gamemode);
+      localStorage.setItem(SWAPMODE_KEY, swapModeReroll ? "1" : "0");
     } catch (e) {}
   }
+
+  function getPlayerName(idx) {
+    return (playerNames[idx] && playerNames[idx].trim()) || ("Player " + idx);
+  }
+
+  // Returns the effective enabled-set for a given player slot. Falls back to
+  // the shared pool when there is no per-player override.
+  function getPlayerEnabled(idx) {
+    const override = playerFilters[idx];
+    if (!override) return enabled;
+    const set = new Set(ROSTER.map(c => c.name));
+    override.forEach(name => set.delete(name));
+    return set;
+  }
+  function hasCustomFilter(idx) { return !!playerFilters[idx]; }
 
   function getInitials(name) {
     return name.split(/[\s&-]+/).filter(w => w.length > 0).slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -677,11 +1449,64 @@
       const slot = document.createElement("div");
       slot.className = "slot";
       slot.id = "slot" + i;
-      slot.innerHTML =
-        '<p class="player">Player ' + i + '</p>' +
-        '<div class="portrait" id="portrait' + i + '">?</div>' +
-        '<p class="name" id="name' + i + '">Press randomize</p>' +
-        '<div><span class="role" id="role' + i + '" style="visibility:hidden">—</span></div>';
+
+      // Editable name
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "player-name-edit";
+      nameWrap.title = "Click to rename";
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = getPlayerName(i);
+      nameInput.maxLength = 24;
+      nameInput.setAttribute("aria-label", "Rename player " + i);
+      nameInput.addEventListener("change", () => {
+        const v = nameInput.value.trim();
+        if (v) playerNames[i] = v; else { delete playerNames[i]; nameInput.value = getPlayerName(i); }
+        savePrefs();
+        // refresh filter button label if open later — done lazily on open
+      });
+      nameInput.addEventListener("keydown", e => { if (e.key === "Enter") nameInput.blur(); });
+      // Pencil icon
+      const pencil = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      pencil.setAttribute("class", "pencil-icon");
+      pencil.setAttribute("viewBox", "0 0 16 16");
+      pencil.setAttribute("fill", "currentColor");
+      pencil.innerHTML = '<path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25a1.75 1.75 0 0 1 .445-.758l8.61-8.61Zm1.414 1.06a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354l-1.086-1.086ZM11.189 6.25 9.75 4.811l-6.286 6.287a.25.25 0 0 0-.064.108l-.558 1.953 1.953-.558a.249.249 0 0 0 .108-.064l6.286-6.287Z"/>';
+      nameWrap.appendChild(nameInput);
+      nameWrap.appendChild(pencil);
+      slot.appendChild(nameWrap);
+
+      // Portrait + name + role
+      const portrait = document.createElement("div");
+      portrait.className = "portrait";
+      portrait.id = "portrait" + i;
+      portrait.textContent = "?";
+      slot.appendChild(portrait);
+
+      const heroName = document.createElement("p");
+      heroName.className = "name";
+      heroName.id = "name" + i;
+      heroName.textContent = "Press randomize";
+      slot.appendChild(heroName);
+
+      const roleWrap = document.createElement("div");
+      const roleSpan = document.createElement("span");
+      roleSpan.className = "role";
+      roleSpan.id = "role" + i;
+      roleSpan.style.visibility = "hidden";
+      roleSpan.textContent = "—";
+      roleWrap.appendChild(roleSpan);
+      slot.appendChild(roleWrap);
+
+      // Filter button
+      const filterBtn = document.createElement("button");
+      filterBtn.className = "filter-btn" + (hasCustomFilter(i) ? " has-custom" : "");
+      filterBtn.id = "filterBtn" + i;
+      filterBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1.5 2.25a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 .584 1.22L10 8.04v4.46a.75.75 0 0 1-.32.614l-3 2A.75.75 0 0 1 5.5 14.5V8.04L1.166 2.72a.75.75 0 0 1-.166-.47Z"/></svg>' +
+        '<span>' + (hasCustomFilter(i) ? "Custom filter" : "Filter") + '</span>';
+      filterBtn.addEventListener("click", () => openFilterModal(i));
+      slot.appendChild(filterBtn);
+
       container.appendChild(slot);
     }
   }
@@ -691,72 +1516,268 @@
       enabled.size + " of " + ROSTER.length + " enabled";
   }
 
-  function renderPool() {
-    const container = document.getElementById("poolContainer");
-    container.innerHTML = "";
-    const roles = ["Vanguard", "Duelist", "Strategist"];
-    roles.forEach(role => {
-      const list = ROSTER.filter(c => c.role === role).sort((a, b) => a.name.localeCompare(b.name));
-      const group = document.createElement("div");
-      group.className = "role-group";
-      const label = document.createElement("p");
-      label.className = "role-label";
-      label.textContent = role + "s (" + list.length + ")";
-      group.appendChild(label);
-      const chips = document.createElement("div");
-      chips.className = "chips";
-      list.forEach(c => {
-        const chip = document.createElement("div");
-        chip.className = "chip" + (enabled.has(c.name) ? "" : " off");
-        chip.title = c.name;
+  // Selected role tab for the shared pool grid
+  let poolRoleFilter = "all";
 
-        const portrait = document.createElement("div");
-        portrait.className = "chip-portrait";
-        portrait.appendChild(buildPortrait(c));
-        chip.appendChild(portrait);
+  // Build a single hero tile element. `enabledSet` controls the off/on state;
+  // `onToggle` is fired on click. `extras` lets callers tag the tile (e.g. banned).
+  function buildHeroTile(character, enabledSet, onToggle, extras) {
+    const tile = document.createElement("div");
+    tile.className = "hero-tile role-" + character.role + (enabledSet.has(character.name) ? "" : " off");
+    if (extras && extras.bannedMarker) tile.classList.add("banned-marker");
+    tile.title = character.name;
 
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "chip-name";
-        nameSpan.textContent = c.name;
-        chip.appendChild(nameSpan);
+    const imgWrap = document.createElement("div");
+    imgWrap.className = "hero-tile-img";
+    imgWrap.appendChild(buildPortrait(character));
+    tile.appendChild(imgWrap);
 
-        chip.addEventListener("click", () => {
-          if (enabled.has(c.name)) enabled.delete(c.name);
-          else enabled.add(c.name);
-          chip.classList.toggle("off");
-          updateCount();
-          savePrefs();
-        });
-        chips.appendChild(chip);
+    const nameEl = document.createElement("div");
+    nameEl.className = "hero-tile-name";
+    nameEl.textContent = character.name.replace(/ \((Vanguard|Duelist|Strategist)\)$/, "");
+    tile.appendChild(nameEl);
+
+    if (onToggle) {
+      tile.addEventListener("click", () => {
+        if (enabledSet.has(character.name)) enabledSet.delete(character.name);
+        else enabledSet.add(character.name);
+        tile.classList.toggle("off");
+        onToggle();
       });
-      group.appendChild(chips);
-      container.appendChild(group);
-    });
+    }
+    return tile;
+  }
+
+  // Track which role sections are collapsed in the shared pool view.
+  // Key: role name. Value: true means collapsed.
+  const collapsedSections = {};
+
+  // Renders a list of characters into a hero-grid container with a role filter.
+  // When roleFilter === "all", we render three labeled, collapsible sections.
+  function renderHeroGrid(container, enabledSet, roleFilter, onToggle) {
+    container.innerHTML = "";
+
+    const renderRoleBlock = (role, withHeader) => {
+      const list = ROSTER
+        .filter(c => c.role === role)
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (list.length === 0) return;
+
+      if (withHeader) {
+        const enabledCount = list.filter(c => enabledSet.has(c.name)).length;
+        const isCollapsed = !!collapsedSections[role];
+
+        const section = document.createElement("div");
+        section.className = "grid-section" + (isCollapsed ? " collapsed" : "");
+
+        const head = document.createElement("button");
+        head.type = "button";
+        head.className = "grid-section-head";
+        head.setAttribute("aria-expanded", String(!isCollapsed));
+        head.innerHTML =
+          '<svg class="grid-section-caret" viewBox="0 0 10 10" fill="currentColor" aria-hidden="true"><path d="M2 3.5l3 3 3-3"/></svg>' +
+          '<span class="grid-section-dot ' + role + '"></span>' +
+          '<p class="grid-section-title">' + role + 's</p>' +
+          '<span class="grid-section-count"><span class="on">' + enabledCount + '</span> / ' + list.length + '</span>';
+        head.addEventListener("click", () => {
+          collapsedSections[role] = !collapsedSections[role];
+          section.classList.toggle("collapsed");
+          head.setAttribute("aria-expanded", String(!collapsedSections[role]));
+        });
+        section.appendChild(head);
+
+        const grid = document.createElement("div");
+        grid.className = "hero-grid";
+        list.forEach(c => grid.appendChild(buildHeroTile(c, enabledSet, () => {
+          // refresh count in header on toggle
+          const newCount = list.filter(x => enabledSet.has(x.name)).length;
+          head.querySelector(".grid-section-count").innerHTML =
+            '<span class="on">' + newCount + '</span> / ' + list.length;
+          if (onToggle) onToggle();
+        })));
+        section.appendChild(grid);
+        container.appendChild(section);
+      } else {
+        list.forEach(c => container.appendChild(buildHeroTile(c, enabledSet, onToggle)));
+      }
+    };
+
+    if (roleFilter === "all") {
+      container.classList.remove("hero-grid");
+      container.classList.add("hero-grid-sectioned");
+      renderRoleBlock("Vanguard", true);
+      renderRoleBlock("Duelist", true);
+      renderRoleBlock("Strategist", true);
+    } else {
+      container.classList.add("hero-grid");
+      container.classList.remove("hero-grid-sectioned");
+      renderRoleBlock(roleFilter, false);
+    }
+  }
+
+  function renderPool() {
+    const grid = document.getElementById("poolGrid");
+    renderHeroGrid(grid, enabled, poolRoleFilter, () => { updateCount(); savePrefs(); });
     updateCount();
   }
 
-  // Pick N unique characters from the pool. If pool is smaller than N,
-  // duplicates are allowed (so the UI doesn't break).
-  function pickSquad(n) {
-    const pool = ROSTER.filter(c => enabled.has(c.name));
-    if (pool.length === 0) return null;
+  function setupPoolRoleTabs() {
+    const tabs = document.querySelectorAll("#poolRoleTabs .role-tab");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        poolRoleFilter = tab.getAttribute("data-role");
+        renderPool();
+      });
+    });
+  }
 
-    const result = [];
-    if (pool.length >= n) {
-      // Shuffle and take first n for unique picks
-      const shuffled = pool.slice();
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(cryptoRandom() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  // ── Per-player filter modal ─────────────────────────────────────────────
+  let filterModalPlayerIdx = null;     // 1-based slot index currently being edited
+  let filterModalRoleFilter = "all";
+  // Working copy: this is the live Set the modal mutates. We only commit it
+  // back to playerFilters when the user presses Done (or auto-commit on close).
+  let filterModalSet = null;
+
+  function updateFilterSummary() {
+    const total = ROSTER.length;
+    const on = filterModalSet.size;
+    const sharedSize = enabled.size;
+    const matchesShared =
+      on === sharedSize &&
+      Array.from(filterModalSet).every(n => enabled.has(n));
+    const summary = document.getElementById("filterSummary");
+    summary.innerHTML = '<strong>' + on + ' of ' + total + ' heroes enabled</strong> for ' +
+      getPlayerName(filterModalPlayerIdx) + '. ' +
+      (matchesShared
+        ? 'Currently identical to the shared pool — saving keeps them on the shared pool.'
+        : 'This is a custom filter that overrides the shared pool.');
+  }
+
+  function openFilterModal(playerIdx) {
+    filterModalPlayerIdx = playerIdx;
+    filterModalRoleFilter = "all";
+
+    // Seed working copy: existing override OR copy of shared pool
+    filterModalSet = new Set(getPlayerEnabled(playerIdx));
+
+    document.getElementById("filterPlayerName").textContent = getPlayerName(playerIdx);
+
+    // Reset role tab UI
+    document.querySelectorAll("#filterRoleTabs .role-tab").forEach(t => {
+      t.classList.toggle("active", t.getAttribute("data-role") === "all");
+    });
+
+    renderFilterGrid();
+    updateFilterSummary();
+    document.getElementById("filterModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function renderFilterGrid() {
+    const grid = document.getElementById("filterGrid");
+    renderHeroGrid(grid, filterModalSet, filterModalRoleFilter, updateFilterSummary);
+  }
+
+  function closeFilterModal(commit) {
+    if (commit && filterModalPlayerIdx != null) {
+      // Decide whether to store as override or treat as "use shared pool"
+      const sharedDisabled = ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name).sort();
+      const myDisabled = ROSTER.filter(c => !filterModalSet.has(c.name)).map(c => c.name).sort();
+      const matchesShared =
+        sharedDisabled.length === myDisabled.length &&
+        sharedDisabled.every((n, i) => n === myDisabled[i]);
+      if (matchesShared) {
+        delete playerFilters[filterModalPlayerIdx];
+      } else {
+        playerFilters[filterModalPlayerIdx] = myDisabled;
       }
-      return shuffled.slice(0, n);
-    } else {
-      // Pool too small — allow duplicates
-      for (let i = 0; i < n; i++) {
-        result.push(pool[Math.floor(cryptoRandom() * pool.length)]);
-      }
-      return result;
+      savePrefs();
+      // Refresh the slot's filter button styling
+      renderSlots();
     }
+    document.getElementById("filterModal").classList.remove("open");
+    document.body.style.overflow = "";
+    filterModalPlayerIdx = null;
+    filterModalSet = null;
+  }
+
+  function setupFilterModal() {
+    document.getElementById("filterModalClose").addEventListener("click", () => closeFilterModal(true));
+    document.getElementById("filterDone").addEventListener("click", () => closeFilterModal(true));
+    document.getElementById("filterReset").addEventListener("click", () => {
+      // Clear override → mirror shared pool
+      filterModalSet = new Set(enabled);
+      renderFilterGrid();
+      updateFilterSummary();
+    });
+    document.getElementById("filterEnableAll").addEventListener("click", () => {
+      ROSTER.forEach(c => filterModalSet.add(c.name));
+      renderFilterGrid();
+      updateFilterSummary();
+    });
+    document.getElementById("filterDisableAll").addEventListener("click", () => {
+      filterModalSet.clear();
+      renderFilterGrid();
+      updateFilterSummary();
+    });
+    document.getElementById("filterCopyShared").addEventListener("click", () => {
+      filterModalSet = new Set(enabled);
+      renderFilterGrid();
+      updateFilterSummary();
+    });
+    document.querySelectorAll("#filterRoleTabs .role-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#filterRoleTabs .role-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        filterModalRoleFilter = tab.getAttribute("data-role");
+        renderFilterGrid();
+      });
+    });
+    // Click backdrop to dismiss (commits)
+    document.getElementById("filterModal").addEventListener("click", (e) => {
+      if (e.target.id === "filterModal") closeFilterModal(true);
+    });
+    // Esc to close
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.getElementById("filterModal").classList.contains("open")) {
+        closeFilterModal(true);
+      }
+    });
+  }
+
+  // Get the pool array (list of characters) for a specific player slot.
+  function getPlayerPool(idx) {
+    const set = getPlayerEnabled(idx);
+    return ROSTER.filter(c => set.has(c.name));
+  }
+
+  // Pick a squad honoring per-player filter overrides.
+  // We assign players in order of most-constrained pool first to maximize the
+  // chance everyone gets a unique pick. Falls back to allowing duplicates only
+  // when a slot literally has no other option.
+  function pickSquad(n) {
+    const slots = [];
+    for (let i = 1; i <= n; i++) {
+      const pool = getPlayerPool(i);
+      if (pool.length === 0) return null; // any empty pool aborts the roll
+      slots.push({ idx: i, pool });
+    }
+    // Order in which we'll assign — smallest pool first
+    const order = slots.slice().sort((a, b) => a.pool.length - b.pool.length);
+    const taken = new Set();
+    // result keyed by original idx (1..n)
+    const result = new Array(n);
+    for (const slot of order) {
+      const fresh = slot.pool.filter(c => !taken.has(c.name));
+      const finalPool = fresh.length > 0 ? fresh : slot.pool; // allow dup only if forced
+      const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+      result[slot.idx - 1] = picked;
+      taken.add(picked.name);
+    }
+    return result;
   }
 
   function setSlot(idx, character, rerollable) {
@@ -981,20 +2002,23 @@
     const squad = pickSquad(playerCount);
     if (!squad) { showEmpty(); return; }
     const slots = [];
+    const slotPools = [];
     for (let i = 1; i <= playerCount; i++) {
       const s = document.getElementById("slot" + i);
       s.classList.add("spinning");
       slots.push(s);
+      slotPools.push(getPlayerPool(i));
     }
     let ac = null;
     try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
     const TOTAL = 8;
     let ticks = 0;
     const interval = setInterval(() => {
-      const pool = ROSTER.filter(c => enabled.has(c.name));
-      if (pool.length > 0)
-        for (let i = 1; i <= playerCount; i++)
+      for (let i = 1; i <= playerCount; i++) {
+        const pool = slotPools[i - 1];
+        if (pool.length > 0)
           setSlot(i, pool[Math.floor(cryptoRandom() * pool.length)], false);
+      }
       if (ac) playTick(ac, 1 - ticks / TOTAL);
       if (++ticks >= TOTAL) {
         clearInterval(interval);
@@ -1002,12 +2026,13 @@
         squad.forEach((c, i) => setSlot(i + 1, c, true));
         slots.forEach(s => s.classList.remove("spinning"));
         if (ac) { playReveal(ac, false); setTimeout(() => ac.close().catch(() => {}), 2000); }
+        onSquadRollComplete();
       }
     }, 80);
   }
 
   function rollOneSimple(playerIdx) {
-    const pool = ROSTER.filter(c => enabled.has(c.name));
+    const pool = getPlayerPool(playerIdx);
     if (pool.length === 0) return;
     const others = new Set(currentSquad.filter((_, i) => i !== playerIdx - 1).map(c => c.name));
     const exclusive = pool.filter(c => !others.has(c.name));
@@ -1040,16 +2065,19 @@
   function rollCS() {
     const squad = pickSquad(playerCount);
     if (!squad) { showEmpty(); return; }
-    const pool = ROSTER.filter(c => enabled.has(c.name));
     showReelOverlay(
-      squad.map((winner, i) => ({ label: "Player " + (i + 1), winner, pool })),
+      squad.map((winner, i) => ({
+        label: getPlayerName(i + 1),
+        winner,
+        pool: getPlayerPool(i + 1)
+      })),
       ROLL_DUR, false,
-      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); }
+      () => { currentSquad = squad.slice(); squad.forEach((c, i) => setSlot(i + 1, c, true)); onSquadRollComplete(); }
     );
   }
 
   function rollOneCS(playerIdx) {
-    const pool = ROSTER.filter(c => enabled.has(c.name));
+    const pool = getPlayerPool(playerIdx);
     if (pool.length === 0) return;
     const others = new Set(currentSquad.filter((_, i) => i !== playerIdx - 1).map(c => c.name));
     const exclusive = pool.filter(c => !others.has(c.name));
@@ -1060,7 +2088,7 @@
     const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
     document.getElementById("portrait" + playerIdx).onclick = null;
     showReelOverlay(
-      [{ label: "Player " + playerIdx, winner: picked, pool: pickFrom }],
+      [{ label: getPlayerName(playerIdx), winner: picked, pool: pickFrom }],
       SINGLE_DUR, false,
       () => { currentSquad[playerIdx - 1] = picked; setSlot(playerIdx, picked, true); }
     );
@@ -1225,6 +2253,11 @@
         buttons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         renderSlots();
+        // Squad size changed — reset round state.
+        currentSquad = [];
+        currentRound = 1;
+        roundHistory = [];
+        if (typeof updateRoundModeUI === "function") updateRoundModeUI();
         savePrefs();
       });
     });
@@ -1242,14 +2275,19 @@
     renderPool();
     savePrefs();
   });
-  document.querySelectorAll("[data-role]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      enabled.clear();
-      const role = btn.getAttribute("data-role");
-      ROSTER.filter(c => c.role === role).forEach(c => enabled.add(c.name));
-      renderPool();
-      savePrefs();
-    });
+  document.getElementById("enableVisible").addEventListener("click", () => {
+    ROSTER
+      .filter(c => poolRoleFilter === "all" || c.role === poolRoleFilter)
+      .forEach(c => enabled.add(c.name));
+    renderPool();
+    savePrefs();
+  });
+  document.getElementById("disableVisible").addEventListener("click", () => {
+    ROSTER
+      .filter(c => poolRoleFilter === "all" || c.role === poolRoleFilter)
+      .forEach(c => enabled.delete(c.name));
+    renderPool();
+    savePrefs();
   });
 
   // CS mode toggle
@@ -1260,11 +2298,228 @@
     savePrefs();
   });
 
+  // ── Settings cog & theme picker ────────────────────────────────────────
+  function setupSettings() {
+    const cog = document.getElementById("settingsCog");
+    const panel = document.getElementById("settingsPanel");
+    cog.addEventListener("click", () => {
+      const open = panel.classList.toggle("open");
+      cog.classList.toggle("open", open);
+      cog.setAttribute("aria-expanded", String(open));
+      panel.setAttribute("aria-hidden", String(!open));
+    });
+
+    function applyTheme(name) {
+      themeName = name;
+      document.documentElement.setAttribute("data-theme", name);
+      document.querySelectorAll(".theme-swatch").forEach(b => {
+        b.classList.toggle("active", b.dataset.theme === name);
+      });
+      savePrefs();
+    }
+    document.querySelectorAll(".theme-swatch").forEach(b => {
+      b.addEventListener("click", () => applyTheme(b.dataset.theme));
+    });
+    applyTheme(themeName);
+  }
+
+  // ── Gamemode + round-swap mechanic ─────────────────────────────────────
+  // Number of rounds for each mode. "domination" can run up to 3 rounds (best-of-3).
+  const GAMEMODE_ROUNDS = { standard: 1, payload: 2, domination: 3 };
+
+  function gamemodeNeedsSwap() {
+    return GAMEMODE_ROUNDS[gamemode] > 1;
+  }
+
+  // Update the visible round-mode UI (counter, swap row, next-round button state).
+  function updateRoundModeUI() {
+    document.querySelectorAll(".gm-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.gm === gamemode);
+    });
+    const swapRow = document.getElementById("swapToggleRow");
+    const nextRow = document.getElementById("nextRoundRow");
+    const counter = document.getElementById("roundCounter");
+    const needsSwap = gamemodeNeedsSwap();
+
+    swapRow.style.display = needsSwap ? "flex" : "none";
+    nextRow.style.display = needsSwap ? "flex" : "none";
+
+    if (needsSwap) {
+      const total = GAMEMODE_ROUNDS[gamemode];
+      counter.style.display = "inline-block";
+      counter.textContent = "Round " + currentRound + " / " + total;
+
+      // Sync swap-mode toggle UI
+      document.getElementById("swapModeCheck").checked = swapModeReroll;
+      document.getElementById("swapModeText").textContent =
+        swapModeReroll ? "Re-roll from pool" : "Swap with teammate";
+      document.getElementById("swapModeHint").textContent = swapModeReroll
+        ? "Each player gets a brand new character from their own pool."
+        : (playerCount === 1
+            ? "With only 1 player, characters reroll from the pool."
+            : "Players rotate characters between each other in a cycle.");
+
+      // Next round button is enabled only when (a) there's a current squad
+      // and (b) we haven't run all rounds yet.
+      const btn = document.getElementById("nextRoundBtn");
+      const hasSquad = currentSquad.length > 0;
+      const moreRounds = currentRound < total;
+      btn.disabled = !(hasSquad && moreRounds);
+      btn.textContent = moreRounds
+        ? ("↻ Next round (→ " + (currentRound + 1) + ")")
+        : "✓ Final round";
+    } else {
+      counter.style.display = "none";
+    }
+  }
+
+  function setupGamemode() {
+    document.querySelectorAll(".gm-btn").forEach(b => {
+      b.addEventListener("click", () => {
+        gamemode = b.dataset.gm;
+        currentRound = 1;
+        roundHistory = currentSquad.length > 0 ? [currentSquad.slice()] : [];
+        savePrefs();
+        updateRoundModeUI();
+      });
+    });
+
+    document.getElementById("swapModeCheck").addEventListener("change", (e) => {
+      swapModeReroll = e.target.checked;
+      savePrefs();
+      updateRoundModeUI();
+    });
+
+    document.getElementById("nextRoundBtn").addEventListener("click", () => {
+      if (currentSquad.length === 0) return;
+      const total = GAMEMODE_ROUNDS[gamemode];
+      if (currentRound >= total) return;
+      performRoundSwap();
+      currentRound += 1;
+      updateRoundModeUI();
+    });
+
+    document.getElementById("resetRoundsBtn").addEventListener("click", () => {
+      // Restore round 1 squad if we have it; otherwise just reset the counter.
+      if (roundHistory.length > 0) {
+        const original = roundHistory[0];
+        currentSquad = original.slice();
+        currentSquad.forEach((c, i) => setSlot(i + 1, c, true));
+      }
+      currentRound = 1;
+      roundHistory = currentSquad.length > 0 ? [currentSquad.slice()] : [];
+      updateRoundModeUI();
+    });
+  }
+
+  // Perform the per-round swap mutation on currentSquad. Two flavors:
+  //   swap-with-teammate (default): cyclic rotation of currently-assigned
+  //     characters between players. With N>=2 players, each player hands
+  //     their character to the next player in a randomised cycle.
+  //   reroll-from-pool: each player gets a freshly randomised character
+  //     from their OWN pool (per-player filter, falling back to shared).
+  function performRoundSwap() {
+    if (currentSquad.length === 0) return;
+
+    // Single player or reroll mode: just reroll each slot.
+    if (swapModeReroll || currentSquad.length === 1) {
+      rerollAllFromPool();
+    } else {
+      cyclicSwapBetweenPlayers();
+    }
+
+    roundHistory.push(currentSquad.slice());
+    flashAllSlots();
+  }
+
+  // Build a single-cycle permutation of [0..n-1] where no element maps to
+  // itself (a derangement that's a single cycle). For n=2 that's just a
+  // direct swap; for n>=3 we shuffle then rotate to form a triangle / N-gon.
+  function buildCyclicPermutation(n) {
+    if (n < 2) return [0];
+    const order = Array.from({ length: n }, (_, i) => i);
+    // Fisher-Yates shuffle
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    // perm[i] = "player at slot i sends their character to slot perm[i]".
+    // Build by rotating the shuffled order: order[k] -> order[k+1].
+    const perm = new Array(n);
+    for (let k = 0; k < n; k++) {
+      const from = order[k];
+      const to   = order[(k + 1) % n];
+      perm[from] = to;
+    }
+    return perm;
+  }
+
+  function cyclicSwapBetweenPlayers() {
+    const n = currentSquad.length;
+    const perm = buildCyclicPermutation(n);
+    const newSquad = new Array(n);
+    for (let i = 0; i < n; i++) {
+      newSquad[perm[i]] = currentSquad[i];
+    }
+    currentSquad = newSquad;
+    currentSquad.forEach((c, i) => setSlot(i + 1, c, true));
+  }
+
+  function rerollAllFromPool() {
+    // Try to pick fresh characters with no duplicates across players,
+    // and where possible, give each player something different from what
+    // they had this round.
+    const n = currentSquad.length;
+    const taken = new Set();
+    const newSquad = [];
+    for (let i = 0; i < n; i++) {
+      const pool = getPlayerPool(i + 1);
+      const previous = currentSquad[i] ? currentSquad[i].name : null;
+      // Prefer: not taken AND not previous. Fall back as needed.
+      let candidates = pool.filter(c => !taken.has(c.name) && c.name !== previous);
+      if (candidates.length === 0) candidates = pool.filter(c => !taken.has(c.name));
+      if (candidates.length === 0) candidates = pool.filter(c => c.name !== previous);
+      if (candidates.length === 0) candidates = pool;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      newSquad.push(pick);
+      taken.add(pick.name);
+    }
+    currentSquad = newSquad;
+    currentSquad.forEach((c, i) => setSlot(i + 1, c, true));
+  }
+
+  function flashAllSlots() {
+    for (let i = 1; i <= currentSquad.length; i++) {
+      const el = document.getElementById("portrait" + i);
+      if (!el) continue;
+      el.classList.remove("swap-flash");
+      // Force reflow so the animation can replay
+      void el.offsetWidth;
+      el.classList.add("swap-flash");
+    }
+  }
+
+  // Called synchronously by rollSimple/rollCS the moment the squad is finalised
+  // (after the animation). Resets round state so multi-round gamemodes start
+  // counting from round 1 of the freshly-rolled squad.
+  function onSquadRollComplete() {
+    if (typeof updateRoundModeUI !== "function") return;
+    if (currentSquad.length === 0) return;
+    currentRound = 1;
+    roundHistory = [currentSquad.slice()];
+    updateRoundModeUI();
+  }
+
   setupTabs();
   setupPlayerCountButtons();
+  setupPoolRoleTabs();
+  setupFilterModal();
+  setupSettings();
+  setupGamemode();
   renderSlots();
   renderPool();
   renderBanSlots();
+  updateRoundModeUI();
 </script>
 </body>
 </html>
