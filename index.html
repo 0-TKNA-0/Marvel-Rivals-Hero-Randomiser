@@ -360,6 +360,66 @@
     background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
   }
+  .formation-card {
+    background: #11141a;
+    border: 1px solid #1a1d24;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin: 0 0 12px;
+  }
+  .formation-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .formation-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #c8c5be;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .formation-meta {
+    font-size: 10px;
+    color: #6b6a64;
+  }
+  .formation-subtitle {
+    font-size: 11px;
+    color: #6b6a64;
+    margin: 0 0 10px;
+    line-height: 1.4;
+  }
+  .formation-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .formation-chip {
+    background: #14161b;
+    border: 1px solid #20232a;
+    border-radius: 999px;
+    color: #8d92a0;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 10px;
+    transition: all 0.15s;
+  }
+  .formation-chip:hover {
+    color: #e8e6e1;
+    border-color: #2c2f38;
+  }
+  .formation-chip.active {
+    color: #ffffff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+  }
+  .formation-empty {
+    font-size: 11px;
+    color: #6b6a64;
+  }
   @media (max-width: 700px) {
     .player-count-row .mode-toggle {
       margin-left: 0;
@@ -1391,7 +1451,7 @@
           <span class="theme-swatch-name">Classic</span>
         </button>
       </div>
-      <span class="site-version">v1.0.3</span>
+      <span class="site-version">v1.0.4</span>
     </div>
   </div>
 
@@ -1435,6 +1495,15 @@
       <span class="toggle-track"><span class="toggle-thumb"></span></span>
       <span class="toggle-label">Character Slider Mode</span>
     </label>
+  </div>
+
+  <div class="formation-card">
+    <div class="formation-head">
+      <p class="formation-title">Soft Role Formation</p>
+      <span class="formation-meta" id="formationMeta">No bias</span>
+    </div>
+    <p class="formation-subtitle">Bias rolls toward common team comps without making them guaranteed. You can enable multiple formations at once.</p>
+    <div class="formation-grid" id="formationGrid"></div>
   </div>
 
   <div class="slots cols-2" id="slotsContainer"></div>
@@ -1610,6 +1679,32 @@
     Duelist: "role-duelist",
     Strategist: "role-strategist"
   };
+  const SOFT_FORMATIONS = {
+    2: [
+      { id: "2-ds", label: "1 Duelist / 1 Strategist", roles: { Duelist: 1, Strategist: 1 } },
+      { id: "2-vd", label: "1 Vanguard / 1 Duelist", roles: { Vanguard: 1, Duelist: 1 } }
+    ],
+    3: [
+      { id: "3-balanced", label: "1 / 1 / 1", roles: { Vanguard: 1, Duelist: 1, Strategist: 1 } },
+      { id: "3-vds", label: "1 Vanguard / 2 Duelist", roles: { Vanguard: 1, Duelist: 2 } },
+      { id: "3-dds", label: "2 Duelist / 1 Strategist", roles: { Duelist: 2, Strategist: 1 } }
+    ],
+    4: [
+      { id: "4-meta", label: "1 Vanguard / 2 Duelist / 1 Strategist", roles: { Vanguard: 1, Duelist: 2, Strategist: 1 } },
+      { id: "4-double-support", label: "1 Vanguard / 1 Duelist / 2 Strategist", roles: { Vanguard: 1, Duelist: 1, Strategist: 2 } },
+      { id: "4-double-dps", label: "2 Duelist / 2 Strategist", roles: { Duelist: 2, Strategist: 2 } }
+    ],
+    5: [
+      { id: "5-default", label: "1 Vanguard / 3 Duelist / 1 Strategist", roles: { Vanguard: 1, Duelist: 3, Strategist: 1 } },
+      { id: "5-tanky", label: "2 Vanguard / 2 Duelist / 1 Strategist", roles: { Vanguard: 2, Duelist: 2, Strategist: 1 } },
+      { id: "5-safe", label: "1 Vanguard / 2 Duelist / 2 Strategist", roles: { Vanguard: 1, Duelist: 2, Strategist: 2 } }
+    ],
+    6: [
+      { id: "6-balanced", label: "2 / 2 / 2", roles: { Vanguard: 2, Duelist: 2, Strategist: 2 } },
+      { id: "6-ladder", label: "1 Vanguard / 3 Duelist / 2 Strategist", roles: { Vanguard: 1, Duelist: 3, Strategist: 2 } },
+      { id: "6-frontline", label: "2 Vanguard / 3 Duelist / 1 Strategist", roles: { Vanguard: 2, Duelist: 3, Strategist: 1 } }
+    ]
+  };
 
   // Cryptographically secure random number in [0, 1).
   // Uses the OS entropy pool via crypto.getRandomValues — genuinely
@@ -1628,6 +1723,7 @@
   const THEME_KEY   = "mr_theme_v1";
   const GAMEMODE_KEY = "mr_gamemode_v1";
   const SWAPMODE_KEY = "mr_swapmode_v1";
+  const FORMATIONS_KEY = "mr_soft_formations_v1";
   const LOBBY_NAME_KEY = "mr_lobby_name";
   const LOBBY_CODE_KEY = "mr_lobby_code";
 
@@ -1641,6 +1737,7 @@
   let gamemode = "standard";       // "standard" | "payload" | "domination"
   let swapModeReroll = false;      // false = swap with teammate, true = reroll from pool
   let currentRound = 1;            // 1-indexed
+  let softFormationIds = [];
   // History of squads each round so we can reset / step back if needed.
   // Each entry is an array of character objects (one per slot).
   let roundHistory = [];
@@ -1672,6 +1769,8 @@
     const savedGm = localStorage.getItem(GAMEMODE_KEY);
     if (savedGm === "payload" || savedGm === "domination" || savedGm === "standard") gamemode = savedGm;
     swapModeReroll = localStorage.getItem(SWAPMODE_KEY) === "1";
+    const savedFormations = localStorage.getItem(FORMATIONS_KEY);
+    if (savedFormations) softFormationIds = JSON.parse(savedFormations) || [];
   } catch (e) {}
 
   function savePrefs() {
@@ -1685,6 +1784,7 @@
       localStorage.setItem(THEME_KEY, themeName);
       localStorage.setItem(GAMEMODE_KEY, gamemode);
       localStorage.setItem(SWAPMODE_KEY, swapModeReroll ? "1" : "0");
+      localStorage.setItem(FORMATIONS_KEY, JSON.stringify(softFormationIds));
     } catch (e) {}
   }
 
@@ -2092,6 +2192,119 @@
     return ROSTER.filter(c => set.has(c.name));
   }
 
+  function getActiveFormationsForCount(count) {
+    const allowed = SOFT_FORMATIONS[count] || [];
+    return allowed.filter(f => softFormationIds.includes(f.id));
+  }
+
+  function updateFormationMeta() {
+    const meta = document.getElementById("formationMeta");
+    if (!meta) return;
+    const active = getActiveFormationsForCount(playerCount);
+    meta.textContent = active.length === 0 ? "No bias" : (active.length === 1 ? active[0].label : (active.length + " formations active"));
+  }
+
+  function renderFormationOptions() {
+    const grid = document.getElementById("formationGrid");
+    if (!grid) return;
+    grid.innerHTML = "";
+    const options = SOFT_FORMATIONS[playerCount] || [];
+    softFormationIds = softFormationIds.filter(id => options.some(f => f.id === id));
+    if (options.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "formation-empty";
+      empty.textContent = "No role formations for solo play.";
+      grid.appendChild(empty);
+      updateFormationMeta();
+      return;
+    }
+    options.forEach(option => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "formation-chip" + (softFormationIds.includes(option.id) ? " active" : "");
+      btn.textContent = option.label;
+      btn.addEventListener("click", () => {
+        if (softFormationIds.includes(option.id)) softFormationIds = softFormationIds.filter(id => id !== option.id);
+        else softFormationIds = softFormationIds.concat(option.id);
+        renderFormationOptions();
+        savePrefs();
+        publishState("softFormation", { ids: softFormationIds.slice() });
+      });
+      grid.appendChild(btn);
+    });
+    updateFormationMeta();
+  }
+
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(cryptoRandom() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function pickSquadUnbiased(n) {
+    const slots = [];
+    for (let i = 1; i <= n; i++) {
+      const pool = getPlayerPool(i);
+      if (pool.length === 0) return null;
+      slots.push({ idx: i, pool });
+    }
+    const order = slots.slice().sort((a, b) => a.pool.length - b.pool.length);
+    const taken = new Set();
+    const result = new Array(n);
+    for (const slot of order) {
+      const fresh = slot.pool.filter(c => !taken.has(c.name));
+      const finalPool = fresh.length > 0 ? fresh : slot.pool;
+      const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+      result[slot.idx - 1] = picked;
+      taken.add(picked.name);
+    }
+    return result;
+  }
+
+  function pickSquadWithFormation(n, formation) {
+    const roleBag = [];
+    Object.keys(formation.roles).forEach(role => {
+      for (let i = 0; i < formation.roles[role]; i++) roleBag.push(role);
+    });
+    if (roleBag.length !== n) return null;
+    let best = null;
+    let bestScore = -1;
+    for (let attempt = 0; attempt < 28; attempt++) {
+      const prefs = shuffleInPlace(roleBag.slice());
+      const slots = [];
+      for (let i = 1; i <= n; i++) {
+        const pool = getPlayerPool(i);
+        if (pool.length === 0) return null;
+        slots.push({ idx: i, pool, pref: prefs[i - 1] });
+      }
+      const order = slots.slice().sort((a, b) => {
+        const aMatches = a.pool.filter(c => c.role === a.pref).length;
+        const bMatches = b.pool.filter(c => c.role === b.pref).length;
+        return aMatches - bMatches || a.pool.length - b.pool.length;
+      });
+      const taken = new Set();
+      const result = new Array(n);
+      let score = 0;
+      for (const slot of order) {
+        const matchingFresh = slot.pool.filter(c => c.role === slot.pref && !taken.has(c.name));
+        const fresh = slot.pool.filter(c => !taken.has(c.name));
+        const matchingAny = slot.pool.filter(c => c.role === slot.pref);
+        const finalPool = matchingFresh.length > 0 ? matchingFresh : (fresh.length > 0 ? (matchingAny.length > 0 ? matchingAny : fresh) : slot.pool);
+        const picked = finalPool[Math.floor(cryptoRandom() * finalPool.length)];
+        result[slot.idx - 1] = picked;
+        taken.add(picked.name);
+        if (picked.role === slot.pref) score++;
+      }
+      if (score > bestScore) {
+        best = result;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
   // Pick a squad honoring per-player filter overrides.
   // We assign players in order of most-constrained pool first to maximize the
   // chance everyone gets a unique pick. Falls back to allowing duplicates only
@@ -2116,6 +2329,16 @@
       taken.add(picked.name);
     }
     return result;
+  }
+
+  function pickSquadBiased(n) {
+    const activeFormations = getActiveFormationsForCount(n);
+    if (activeFormations.length > 0) {
+      const chosen = activeFormations[Math.floor(cryptoRandom() * activeFormations.length)];
+      const biased = pickSquadWithFormation(n, chosen);
+      if (biased) return biased;
+    }
+    return pickSquad(n);
   }
 
   function setSlot(idx, character, rerollable) {
@@ -2349,7 +2572,7 @@
 
   // ── Simple (original) flicker animations ────────────────────────────────
   function rollSimple() {
-    const squad = pickSquad(playerCount);
+    const squad = pickSquadBiased(playerCount);
     if (!squad) { showEmpty(); return; }
     publishState("roll", null, { squad: squad.slice(), currentRound: 1 });
     const slots = [];
@@ -2417,7 +2640,7 @@
 
   // ── CS reel animations ───────────────────────────────────────────────────
   function rollCS() {
-    const squad = pickSquad(playerCount);
+    const squad = pickSquadBiased(playerCount);
     if (!squad) { showEmpty(); return; }
     publishState("roll", null, { squad: squad.slice(), currentRound: 1 });
     showReelOverlay(
@@ -2634,6 +2857,7 @@
         currentRound = 1;
         roundHistory = [];
         if (typeof updateRoundModeUI === "function") updateRoundModeUI();
+        renderFormationOptions();
         savePrefs();
         publishState("playerCount");
       });
@@ -2906,6 +3130,7 @@
   setupGamemode();
   renderSlots();
   renderPool();
+  renderFormationOptions();
   renderBanSlots();
   updateRoundModeUI();
 
@@ -3058,6 +3283,7 @@
       enabled: serializeStringList(ROSTER.filter(c => !enabled.has(c.name)).map(c => c.name)),
       playerFilters: overrides && overrides.playerFilters ? serializePlayerFiltersMap(overrides.playerFilters) : serializePlayerFiltersMap(playerFilters || {}),
       playerNames: overrides && overrides.playerNames ? overrides.playerNames : (playerNames || {}),
+      softFormations: overrides && overrides.softFormations ? overrides.softFormations.slice() : softFormationIds.slice(),
     };
     lobbyRef.child("state").set(state).catch(err => console.warn("[Lobby] publish err:", err));
   }
@@ -3088,6 +3314,9 @@
     if (action === "playerNames" && details && details.playerIdx) {
       return name + " renamed player " + details.playerIdx + " to " + (details.name || getPlayerName(details.playerIdx));
     }
+    if (action === "softFormation") {
+      return name + (softFormationIds.length > 0 ? " updated the soft role formations" : " cleared the soft role formations");
+    }
     const msgs = {
       roll:        name + " rolled the squad",
       rollOne:     name + " re-rolled player " + ((details && details.playerIdx) || "?"),
@@ -3114,7 +3343,58 @@
   function pushActivity(msg) {
     if (!lobbyRef) return;
     const entryRef = lobbyRef.child("activity").push();
-    entryRef.set({ msg, t: Date.now(), by: MY_UID }).catch(err => console.warn("[Lobby] activity err:", err));
+    entryRef.set({ msg, t: Date.now() }).catch(err => console.warn("[Lobby] activity err:", err));
+  }
+
+  function animateRemoteSquadSlider(nextSquad, details) {
+    const rows = [];
+    if (details && typeof details.playerIdx === "number") {
+      const idx = details.playerIdx;
+      const winner = nextSquad[idx - 1];
+      if (!winner) return;
+      rows.push({ label: getPlayerName(idx), winner, pool: getPlayerPool(idx) });
+      showReelOverlay(rows, SINGLE_DUR, false, () => {
+        currentSquad[idx - 1] = winner;
+        setSlot(idx, winner, true);
+      });
+      return;
+    }
+    for (let i = 1; i <= playerCount; i++) {
+      const winner = nextSquad[i - 1];
+      if (!winner) continue;
+      rows.push({ label: getPlayerName(i), winner, pool: getPlayerPool(i) });
+    }
+    if (rows.length === 0) return;
+    showReelOverlay(rows, ROLL_DUR, false, () => {
+      currentSquad = nextSquad.slice();
+      nextSquad.forEach((c, i) => { if (c) setSlot(i + 1, c, true); });
+      onSquadRollComplete();
+    });
+  }
+
+  function animateRemoteBansSlider(nextBans, details) {
+    const rows = [];
+    if (details && typeof details.banIdx === "number") {
+      const idx = details.banIdx;
+      const winner = nextBans[idx - 1];
+      if (!winner) return;
+      rows.push({ label: "Ban " + idx, winner, pool: BAN_ROSTER });
+      showReelOverlay(rows, SINGLE_DUR, true, () => {
+        currentBans[idx - 1] = winner;
+        setBanSlot(idx, winner, true);
+      });
+      return;
+    }
+    for (let i = 1; i <= 3; i++) {
+      const winner = nextBans[i - 1];
+      if (!winner) continue;
+      rows.push({ label: "Ban " + i, winner, pool: BAN_ROSTER });
+    }
+    if (rows.length === 0) return;
+    showReelOverlay(rows, ROLL_DUR, true, () => {
+      currentBans = nextBans.slice();
+      nextBans.forEach((c, i) => { if (c) setBanSlot(i + 1, c, true); });
+    });
   }
 
   function animateRemoteSquad(nextSquad, details) {
@@ -3198,6 +3478,7 @@
           b.classList.toggle("active", parseInt(b.dataset.count) === playerCount);
         });
         renderSlots();
+        renderFormationOptions();
         currentSquad = [];
         currentRound = 1;
         roundHistory = [];
@@ -3261,11 +3542,18 @@
           updateFilterSummary();
         }
       }
+      if (Array.isArray(st.softFormations)) {
+        softFormationIds = st.softFormations.slice();
+        renderFormationOptions();
+      }
       // Squad
       if (Array.isArray(st.squad)) {
         const newSquad = st.squad.map(n => n ? ROSTER.find(c => c.name === n) || null : null);
         if (newSquad.some(Boolean)) {
-          if (action === "roll" || action === "rollOne" || action === "nextRound") animateRemoteSquad(newSquad, details);
+          if (action === "roll" || action === "rollOne" || action === "nextRound") {
+            if (csMode) animateRemoteSquadSlider(newSquad, details);
+            else animateRemoteSquad(newSquad, details);
+          }
           else {
             currentSquad = newSquad.slice();
             currentSquad.forEach((c, i) => { if (c) setSlot(i + 1, c, true); });
@@ -3276,7 +3564,10 @@
       if (Array.isArray(st.bans)) {
         const newBans = st.bans.map(n => n ? BAN_ROSTER.find(c => c.name === n) || null : null);
         if (newBans.some(Boolean)) {
-          if (action === "rollBans" || action === "rollOneBan") animateRemoteBans(newBans, details);
+          if (action === "rollBans" || action === "rollOneBan") {
+            if (csMode) animateRemoteBansSlider(newBans, details);
+            else animateRemoteBans(newBans, details);
+          }
           else {
             currentBans = newBans.slice();
             currentBans.forEach((c, i) => { if (c) setBanSlot(i + 1, c, true); });
