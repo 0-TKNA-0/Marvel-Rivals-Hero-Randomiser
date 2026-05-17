@@ -1304,17 +1304,16 @@
   }
   .lobby-leave-btn:hover { border-color: #e07070; color: #e07070; }
   .lobby-feed {
-    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0;
   }
   .lobby-feed-item {
-    font-size: 11px; color: #6b6a64; padding: 4px 6px; border-radius: 4px;
-    background: #14161b; line-height: 1.4;
+    font-size: 11px; color: #8d8b85; padding: 7px 8px; line-height: 1.45;
+    border-bottom: 1px solid #1a1d24;
   }
+  .lobby-feed-item:first-child { border-top: 1px solid #1a1d24; }
   .lobby-feed-time {
-    display: block;
-    font-size: 10px;
-    color: #4f5562;
-    margin-bottom: 2px;
+    display: block; font-size: 10px; color: #4a5060;
+    margin-bottom: 2px; font-variant-numeric: tabular-nums;
   }
 
   @media (max-width: 1299px) {
@@ -3773,13 +3772,16 @@
   }
 
   function renderActivityFeed(items) {
+    // Newest first
     const orderedItems = items.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
     const renderInto = (feed) => {
       if (!feed) return;
       feed.innerHTML = "";
-      orderedItems.forEach(item => {
+      orderedItems.forEach((item, idx) => {
         const el = document.createElement("div");
         el.className = "lobby-feed-item";
+        // Make the most recent entry slightly brighter
+        if (idx === 0) el.style.color = "#b0ada6";
         const time = document.createElement("span");
         time.className = "lobby-feed-time";
         time.textContent = formatActivityTime(item.t);
@@ -3789,6 +3791,7 @@
         el.appendChild(text);
         feed.appendChild(el);
       });
+      // Newest is at top — scroll to top
       feed.scrollTop = 0;
     };
     renderInto(document.getElementById("lobbyFeed"));
