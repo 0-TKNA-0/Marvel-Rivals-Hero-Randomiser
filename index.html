@@ -360,66 +360,80 @@
     background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
     color: #ffffff;
   }
+  /* ── Collapsible sections ──────────────────────────────────────────── */
+  .collapsible-head {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; background: none; border: none;
+    padding: 0; cursor: pointer; text-align: left; color: inherit;
+  }
+  .collapsible-head:hover .collapsible-caret { color: #c8c6c1; }
+  .collapsible-caret {
+    width: 16px; height: 16px; flex-shrink: 0;
+    color: #6b6a64; transition: transform 0.22s ease, color 0.12s;
+  }
+  .collapsed .collapsible-caret { transform: rotate(-90deg); }
+  .collapsible-body {
+    overflow: hidden; max-height: 600px; opacity: 1;
+    transition: max-height 0.3s ease, opacity 0.22s;
+  }
+  .collapsed .collapsible-body { max-height: 0; opacity: 0; }
+
+  /* ── Role Formation card ────────────────────────────────────────────── */
   .formation-card {
-    background: #11141a;
-    border: 1px solid #1a1d24;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin: 0 0 12px;
+    background: #11141a; border: 1px solid #1a1d24;
+    border-radius: 10px; padding: 10px 12px; margin: 0 0 12px;
   }
   .formation-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
   .formation-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: #c8c5be;
-    margin: 0;
-    letter-spacing: 0.02em;
+    font-size: 11px; font-weight: 600; color: #c8c5be;
+    margin: 0; letter-spacing: 0.02em;
   }
-  .formation-meta {
-    font-size: 10px;
-    color: #6b6a64;
+  .formation-preset-label {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    color: var(--accent-1); letter-spacing: 0.04em; flex-shrink: 0;
   }
-  .formation-subtitle {
-    font-size: 11px;
-    color: #6b6a64;
-    margin: 0 0 10px;
-    line-height: 1.4;
+  .formation-body { padding-top: 10px; }
+  .formation-presets {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px;
   }
-  .formation-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  .formation-preset-btn {
+    background: #14161b; border: 1px solid #20232a; border-radius: 999px;
+    color: #8d92a0; cursor: pointer; font-size: 11px; font-weight: 600;
+    padding: 6px 11px; transition: all 0.15s;
   }
-  .formation-chip {
-    background: #14161b;
-    border: 1px solid #20232a;
-    border-radius: 999px;
-    color: #8d92a0;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 7px 10px;
-    transition: all 0.15s;
+  .formation-preset-btn:hover { color: #e8e6e1; border-color: #2c2f38; }
+  .formation-preset-btn.active {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-color: transparent; color: #fff;
   }
-  .formation-chip:hover {
-    color: #e8e6e1;
-    border-color: #2c2f38;
+  .formation-hint {
+    font-size: 11px; color: #555; margin: 0; line-height: 1.4;
   }
-  .formation-chip.active {
-    color: #ffffff;
-    border-color: transparent;
-    background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%);
+
+  /* ── Per-slot role pin badge ────────────────────────────────────────── */
+  .role-pin-btn {
+    border: 1px solid #20232a; border-radius: 999px; background: #14161b;
+    color: #6b6a64; cursor: pointer; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.04em; padding: 3px 9px; margin-top: 5px;
+    transition: all 0.15s; text-transform: uppercase; display: block;
+    width: fit-content; margin-left: auto; margin-right: auto;
   }
-  .formation-empty {
-    font-size: 11px;
-    color: #6b6a64;
+  .role-pin-btn:hover { color: #e8e6e1; border-color: #333; }
+  .role-pin-btn.pin-Vanguard {
+    background: rgba(79,140,255,0.14); border-color: rgba(79,140,255,0.35); color: #7aabff;
   }
+  .role-pin-btn.pin-Duelist {
+    background: rgba(192,82,79,0.14); border-color: rgba(192,82,79,0.35); color: #e07070;
+  }
+  .role-pin-btn.pin-Strategist {
+    background: rgba(74,174,114,0.14); border-color: rgba(74,174,114,0.35); color: #6bcf8f;
+  }
+
+  /* ── Gamemode collapsible body ──────────────────────────────────────── */
+  .round-mode-head.collapsible-head { margin-bottom: 0; }
+  .gamemode-body { padding-top: 10px; }
   @media (max-width: 700px) {
     .player-count-row .mode-toggle {
       margin-left: 0;
@@ -1497,13 +1511,16 @@
     </label>
   </div>
 
-  <div class="formation-card">
-    <div class="formation-head">
-      <p class="formation-title">Soft Role Formation</p>
-      <span class="formation-meta" id="formationMeta">No bias</span>
+  <div class="formation-card" id="formationCard">
+    <button class="formation-head collapsible-head" id="formationHead" aria-expanded="true">
+      <svg class="collapsible-caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1.5,3.5 5,6.5 8.5,3.5"/></svg>
+      <p class="formation-title">Role Formation</p>
+      <span class="formation-preset-label" id="formationPresetLabel">Free</span>
+    </button>
+    <div class="formation-body collapsible-body" id="formationBody">
+      <div class="formation-presets" id="formationPresets"></div>
+      <p class="formation-hint">Pick a preset to distribute roles across all slots. Click any player's role badge below to override individual slots.</p>
     </div>
-    <p class="formation-subtitle">Bias rolls toward common team comps without making them guaranteed. You can enable multiple formations at once.</p>
-    <div class="formation-grid" id="formationGrid"></div>
   </div>
 
   <div class="slots cols-2" id="slotsContainer"></div>
@@ -1514,27 +1531,30 @@
 
   <!-- Round / gamemode mechanic -->
   <div class="round-mode-card" id="roundModeCard">
-    <div class="round-mode-head">
+    <button class="round-mode-head collapsible-head" id="gamemodeHead" aria-expanded="true">
+      <svg class="collapsible-caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1.5,3.5 5,6.5 8.5,3.5"/></svg>
       <p class="round-mode-title">Gamemode <span class="round-counter" id="roundCounter" style="display:none;">Round 1</span></p>
-    </div>
-    <div class="gamemode-buttons" id="gmButtons">
-      <button class="gm-btn active" data-gm="standard">Standard <span class="gm-rounds">— no swaps</span></button>
-      <button class="gm-btn" data-gm="payload">Payload <span class="gm-rounds">— 2 rounds</span></button>
-      <button class="gm-btn" data-gm="domination">Domination <span class="gm-rounds">— bo3</span></button>
-    </div>
-    <div class="swap-toggle-row" id="swapToggleRow" style="display:none;">
-      <div class="swap-toggle-label">
-        <span id="swapModeText">Swap with teammate</span>
-        <small id="swapModeHint">After each round, players rotate characters between each other.</small>
+    </button>
+    <div class="gamemode-body collapsible-body" id="gamemodeBody">
+      <div class="gamemode-buttons" id="gmButtons">
+        <button class="gm-btn active" data-gm="standard">Standard <span class="gm-rounds">— no swaps</span></button>
+        <button class="gm-btn" data-gm="payload">Payload <span class="gm-rounds">— 2 rounds</span></button>
+        <button class="gm-btn" data-gm="domination">Domination <span class="gm-rounds">— bo3</span></button>
       </div>
-      <label class="swap-mode-toggle" title="Toggle reroll mode">
-        <input type="checkbox" id="swapModeCheck">
-        <span class="toggle-track"><span class="toggle-thumb"></span></span>
-      </label>
-    </div>
-    <div class="next-round-row" id="nextRoundRow" style="display:none;">
-      <button class="next-round-btn" id="nextRoundBtn" disabled>↻ Next round</button>
-      <button class="reset-rounds-btn" id="resetRoundsBtn">Reset</button>
+      <div class="swap-toggle-row" id="swapToggleRow" style="display:none;">
+        <div class="swap-toggle-label">
+          <span id="swapModeText">Swap with teammate</span>
+          <small id="swapModeHint">After each round, players rotate characters between each other.</small>
+        </div>
+        <label class="swap-mode-toggle" title="Toggle reroll mode">
+          <input type="checkbox" id="swapModeCheck">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+      </div>
+      <div class="next-round-row" id="nextRoundRow" style="display:none;">
+        <button class="next-round-btn" id="nextRoundBtn" disabled>↻ Next round</button>
+        <button class="reset-rounds-btn" id="resetRoundsBtn">Reset</button>
+      </div>
     </div>
   </div>
 
@@ -1707,6 +1727,37 @@
     ]
   };
 
+  // Formation presets — each generates an array of role pins for n players.
+  // null means "Any role" for that slot.
+  const FORMATION_PRESETS = [
+    { id: "free",           label: "Free",        emoji: "🎲",
+      pins: n => Array(n).fill(null) },
+    { id: "balanced",       label: "Balanced",    emoji: "⚖️",
+      pins: n => ({ 1:[null], 2:["Vanguard","Strategist"],
+        3:["Vanguard","Duelist","Strategist"],
+        4:["Vanguard","Duelist","Duelist","Strategist"],
+        5:["Vanguard","Duelist","Duelist","Strategist","Strategist"],
+        6:["Vanguard","Vanguard","Duelist","Duelist","Strategist","Strategist"] }[n] || Array(n).fill(null)) },
+    { id: "dive",           label: "Dive",        emoji: "⚔️",
+      pins: n => ({ 1:[null], 2:["Duelist","Strategist"],
+        3:["Vanguard","Duelist","Duelist"],
+        4:["Vanguard","Duelist","Duelist","Strategist"],
+        5:["Vanguard","Duelist","Duelist","Duelist","Strategist"],
+        6:["Vanguard","Duelist","Duelist","Duelist","Duelist","Strategist"] }[n] || Array(n).fill(null)) },
+    { id: "brawl",          label: "Brawl",       emoji: "🛡️",
+      pins: n => ({ 1:[null], 2:["Vanguard","Duelist"],
+        3:["Vanguard","Vanguard","Duelist"],
+        4:["Vanguard","Vanguard","Duelist","Strategist"],
+        5:["Vanguard","Vanguard","Duelist","Duelist","Strategist"],
+        6:["Vanguard","Vanguard","Vanguard","Duelist","Duelist","Strategist"] }[n] || Array(n).fill(null)) },
+    { id: "double-support", label: "2× Support",  emoji: "💚",
+      pins: n => ({ 1:[null], 2:["Duelist","Strategist"],
+        3:["Vanguard","Duelist","Strategist"],
+        4:["Vanguard","Duelist","Strategist","Strategist"],
+        5:["Vanguard","Duelist","Duelist","Strategist","Strategist"],
+        6:["Vanguard","Duelist","Duelist","Duelist","Strategist","Strategist"] }[n] || Array(n).fill(null)) },
+  ];
+
   // Cryptographically secure random number in [0, 1).
   // Uses the OS entropy pool via crypto.getRandomValues — genuinely
   // unpredictable, unlike Math.random()'s pseudo-random sequence.
@@ -1725,6 +1776,10 @@
   const GAMEMODE_KEY = "mr_gamemode_v1";
   const SWAPMODE_KEY = "mr_swapmode_v1";
   const FORMATIONS_KEY = "mr_soft_formations_v1";
+  const PINS_KEY        = "mr_slot_pins_v1";
+  const PRESET_KEY      = "mr_formation_preset_v1";
+  const ROLE_COLLAPSED_KEY = "mr_role_collapsed_v1";
+  const GM_COLLAPSED_KEY   = "mr_gm_collapsed_v1";
   const LOBBY_NAME_KEY = "mr_lobby_name";
   const LOBBY_CODE_KEY = "mr_lobby_code";
 
@@ -1738,7 +1793,13 @@
   let gamemode = "standard";       // "standard" | "payload" | "domination"
   let swapModeReroll = false;      // false = swap with teammate, true = reroll from pool
   let currentRound = 1;            // 1-indexed
-  let softFormationIds = [];
+  let softFormationIds = [];       // legacy — kept so old saves don't crash
+
+  // Formation preset + per-slot pins
+  let slotRolePins   = {};          // { 1: "Vanguard", 2: null, ... }  null = Any
+  let formationPreset = "free";     // "free"|"balanced"|"dive"|"brawl"|"double-support"|"custom"
+  let roleFormationCollapsed = false;
+  let gamemodeCollapsed = false;
   // History of squads each round so we can reset / step back if needed.
   // Each entry is an array of character objects (one per slot).
   let roundHistory = [];
@@ -1772,6 +1833,12 @@
     swapModeReroll = localStorage.getItem(SWAPMODE_KEY) === "1";
     const savedFormations = localStorage.getItem(FORMATIONS_KEY);
     if (savedFormations) softFormationIds = JSON.parse(savedFormations) || [];
+    const savedPins = localStorage.getItem(PINS_KEY);
+    if (savedPins) slotRolePins = JSON.parse(savedPins) || {};
+    const savedPreset = localStorage.getItem(PRESET_KEY);
+    if (savedPreset) formationPreset = savedPreset;
+    roleFormationCollapsed = localStorage.getItem(ROLE_COLLAPSED_KEY) === "1";
+    gamemodeCollapsed      = localStorage.getItem(GM_COLLAPSED_KEY)   === "1";
   } catch (e) {}
 
   function savePrefs() {
@@ -1786,6 +1853,10 @@
       localStorage.setItem(GAMEMODE_KEY, gamemode);
       localStorage.setItem(SWAPMODE_KEY, swapModeReroll ? "1" : "0");
       localStorage.setItem(FORMATIONS_KEY, JSON.stringify(softFormationIds));
+      localStorage.setItem(PINS_KEY,   JSON.stringify(slotRolePins));
+      localStorage.setItem(PRESET_KEY, formationPreset);
+      localStorage.setItem(ROLE_COLLAPSED_KEY, roleFormationCollapsed ? "1" : "0");
+      localStorage.setItem(GM_COLLAPSED_KEY,   gamemodeCollapsed      ? "1" : "0");
     } catch (e) {}
   }
 
@@ -1926,6 +1997,17 @@
       roleSpan.textContent = "—";
       roleWrap.appendChild(roleSpan);
       slot.appendChild(roleWrap);
+
+      // Role pin button — cycles Any → Vanguard → Duelist → Strategist → Any
+      const pinBtn = document.createElement("button");
+      pinBtn.type = "button";
+      pinBtn.id = "rolePin" + i;
+      const initPin = slotRolePins[i] || null;
+      pinBtn.className = "role-pin-btn" + (initPin ? " pin-" + initPin : "");
+      pinBtn.textContent = initPin ? "🔒 " + initPin : "Any role";
+      pinBtn.title = "Click to pin this slot to a specific role";
+      pinBtn.addEventListener("click", () => cycleRolePin(i));
+      slot.appendChild(pinBtn);
 
       // Filter button
       const filterBtn = document.createElement("button");
@@ -2188,8 +2270,15 @@
   }
 
   // Get the pool array (list of characters) for a specific player slot.
+  // Respects both per-player enabled filter AND the per-slot role pin.
   function getPlayerPool(idx) {
     const set = getPlayerEnabled(idx);
+    const pin = slotRolePins[idx] || null;
+    if (pin) {
+      const pinned = ROSTER.filter(c => set.has(c.name) && c.role === pin);
+      // Fall back to full pool if the pinned role has no available characters
+      return pinned.length > 0 ? pinned : ROSTER.filter(c => set.has(c.name));
+    }
     return ROSTER.filter(c => set.has(c.name));
   }
 
@@ -2198,43 +2287,107 @@
     return allowed.filter(f => softFormationIds.includes(f.id));
   }
 
-  function updateFormationMeta() {
-    const meta = document.getElementById("formationMeta");
-    if (!meta) return;
-    const active = getActiveFormationsForCount(playerCount);
-    meta.textContent = active.length === 0 ? "No bias" : (active.length === 1 ? active[0].label : (active.length + " formations active"));
+  // ── Formation preset + per-slot pin system ──────────────────────────────
+
+  function applyFormationPreset(presetId, save) {
+    const preset = FORMATION_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    formationPreset = presetId;
+    const pins = preset.pins(playerCount);
+    slotRolePins = {};
+    pins.forEach((role, i) => { if (role) slotRolePins[i + 1] = role; });
+    // Refresh pin button labels on existing slots
+    for (let i = 1; i <= playerCount; i++) refreshPinButton(i);
+    updateFormationPresetUI();
+    if (save !== false) { savePrefs(); publishState("formation"); }
+  }
+
+  function cycleRolePin(idx) {
+    const order = [null, "Vanguard", "Duelist", "Strategist"];
+    const current = slotRolePins[idx] || null;
+    const next = order[(order.indexOf(current) + 1) % order.length];
+    if (next === null) delete slotRolePins[idx];
+    else slotRolePins[idx] = next;
+    refreshPinButton(idx);
+    // Any manual override = "custom" preset
+    formationPreset = "custom";
+    updateFormationPresetUI();
+    savePrefs();
+    publishState("formation");
+  }
+
+  function refreshPinButton(idx) {
+    const btn = document.getElementById("rolePin" + idx);
+    if (!btn) return;
+    const pin = slotRolePins[idx] || null;
+    btn.className = "role-pin-btn" + (pin ? " pin-" + pin : "");
+    btn.textContent = pin ? "🔒 " + pin : "Any role";
+  }
+
+  function updateFormationPresetUI() {
+    document.querySelectorAll(".formation-preset-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.preset === formationPreset);
+    });
+    const label = document.getElementById("formationPresetLabel");
+    if (!label) return;
+    const preset = FORMATION_PRESETS.find(p => p.id === formationPreset);
+    label.textContent = preset ? preset.label : "Custom";
   }
 
   function renderFormationOptions() {
-    const grid = document.getElementById("formationGrid");
-    if (!grid) return;
-    grid.innerHTML = "";
-    const options = SOFT_FORMATIONS[playerCount] || [];
-    softFormationIds = softFormationIds.filter(id => options.some(f => f.id === id));
-    if (options.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "formation-empty";
-      empty.textContent = "No role formations for solo play.";
-      grid.appendChild(empty);
-      updateFormationMeta();
-      return;
-    }
-    options.forEach(option => {
+    const container = document.getElementById("formationPresets");
+    if (!container) return;
+    container.innerHTML = "";
+    FORMATION_PRESETS.forEach(preset => {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "formation-chip" + (softFormationIds.includes(option.id) ? " active" : "");
-      btn.textContent = option.label;
-      btn.addEventListener("click", () => {
-        if (softFormationIds.includes(option.id)) softFormationIds = softFormationIds.filter(id => id !== option.id);
-        else softFormationIds = softFormationIds.concat(option.id);
-        renderFormationOptions();
-        savePrefs();
-        publishState("softFormation", { ids: softFormationIds.slice() });
-      });
-      grid.appendChild(btn);
+      btn.className = "formation-preset-btn" + (formationPreset === preset.id ? " active" : "");
+      btn.dataset.preset = preset.id;
+      btn.textContent = preset.emoji + " " + preset.label;
+      btn.addEventListener("click", () => applyFormationPreset(preset.id, true));
+      container.appendChild(btn);
     });
-    updateFormationMeta();
+    // "Custom" label button — shown only when user has manually overridden pins
+    const customBtn = document.createElement("button");
+    customBtn.type = "button";
+    customBtn.className = "formation-preset-btn" + (formationPreset === "custom" ? " active" : "");
+    customBtn.dataset.preset = "custom";
+    customBtn.textContent = "✏️ Custom";
+    customBtn.addEventListener("click", () => {
+      formationPreset = "custom";
+      updateFormationPresetUI();
+      savePrefs();
+    });
+    container.appendChild(customBtn);
   }
+
+  // ── Collapsible cards ────────────────────────────────────────────────────
+
+  function setupCollapsibles() {
+    function wire(cardId, headId, stateGetter, stateSetter, storageKey) {
+      const card = document.getElementById(cardId);
+      const head = document.getElementById(headId);
+      if (!card || !head) return;
+      if (stateGetter()) card.classList.add("collapsed");
+      head.setAttribute("aria-expanded", String(!stateGetter()));
+      head.addEventListener("click", () => {
+        const next = !stateGetter();
+        stateSetter(next);
+        card.classList.toggle("collapsed", next);
+        head.setAttribute("aria-expanded", String(!next));
+        try { localStorage.setItem(storageKey, next ? "1" : "0"); } catch(e) {}
+      });
+    }
+    wire("formationCard", "formationHead",
+      () => roleFormationCollapsed, v => { roleFormationCollapsed = v; },
+      ROLE_COLLAPSED_KEY);
+    wire("roundModeCard", "gamemodeHead",
+      () => gamemodeCollapsed, v => { gamemodeCollapsed = v; },
+      GM_COLLAPSED_KEY);
+  }
+
+  // Legacy stub — kept so old publishState("softFormation") calls don't crash
+  function updateFormationMeta() {}
 
   function shuffleInPlace(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -2332,13 +2485,9 @@
     return result;
   }
 
+  // Role enforcement is now handled in getPlayerPool via slotRolePins,
+  // so pickSquad already naturally respects formation pins.
   function pickSquadBiased(n) {
-    const activeFormations = getActiveFormationsForCount(n);
-    if (activeFormations.length > 0) {
-      const chosen = activeFormations[Math.floor(cryptoRandom() * activeFormations.length)];
-      const biased = pickSquadWithFormation(n, chosen);
-      if (biased) return biased;
-    }
     return pickSquad(n);
   }
 
@@ -2852,13 +3001,15 @@
         playerCount = count;
         buttons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
+        // Re-apply preset to new count so pins stay consistent
+        if (formationPreset !== "custom") applyFormationPreset(formationPreset, false);
         renderSlots();
+        renderFormationOptions();
         // Squad size changed — reset round state.
         currentSquad = [];
         currentRound = 1;
         roundHistory = [];
         if (typeof updateRoundModeUI === "function") updateRoundModeUI();
-        renderFormationOptions();
         savePrefs();
         publishState("playerCount");
       });
@@ -3129,6 +3280,7 @@
   setupFilterModal();
   setupSettings();
   setupGamemode();
+  setupCollapsibles();
   renderSlots();
   renderPool();
   renderFormationOptions();
